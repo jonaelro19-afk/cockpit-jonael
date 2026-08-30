@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  ── Direction artistique : sombre premium ────────────────────────
+  Thème sombre uniquement. Sobre par défaut ; les couleurs vives sont
+  réservées aux moments importants (retard/urgence, argent, positif).
 
+  Variables sémantiques (rôle, pas teinte) mappées vers des classes
+  Tailwind : bg-bg / bg-surface / text-muted / border-line / rounded-card…
+*/
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-elevated: var(--elevated);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  /* réservées */
+  --color-live: var(--live);
+  --color-lime: var(--lime);
+  --color-online: var(--online);
+  --color-warn: var(--warn);
+
+  /* rayons */
+  --radius-card: 20px;
+  --radius-field: 14px;
+  --radius-pill: 999px;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg: #0a0a0a;
+  --surface: #121212;
+  --surface-2: #1c1c1e;
+  --elevated: #1a1a1a;
+  --line: rgba(255, 255, 255, 0.08);
+
+  /* texte */
+  --text: #ffffff;
+  --muted: #9a9a9e;
+  --faint: #6b6b70;
+
+  /* accent principal = pilule blanche sur noir (actions principales) */
+  --accent: #ffffff;
+  --accent-fg: #0a0a0a;
+  --accent-soft: rgba(255, 255, 255, 0.08);
+
+  /* couleurs vives réservées */
+  --live: #ff3b30; /* retard, urgence, "LIVE" */
+  --lime: #d6ff3c; /* argent en poche, statut actif, récompense */
+  --online: #34c759; /* en ligne, variation positive, jauge */
+  --warn: #ffd60a; /* attention, "en train de parler" */
+
+  /* dégradé premium — réservé (paiement, badge "Paid", icône premium) */
+  --premium: linear-gradient(
+    120deg,
+    #ffd23f 0%,
+    #ff7a3d 38%,
+    #ff4fa0 70%,
+    #b14fff 100%
+  );
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+/* Focus clavier visible sur fond sombre */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Barres de défilement discrètes */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 999px;
+  border: 3px solid var(--bg);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Impression : fond blanc, on masque la navigation et l'app enveloppante */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+  }
+  nav,
+  [data-chrome] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
+
+/* ── Composants réutilisables ─────────────────────────────────── */
+@layer components {
+  /* Boutons pilule. Usage : className="btn-primary" (pas besoin de "btn"). */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2
+      rounded-pill px-4 py-2 text-sm font-semibold transition-colors
+      disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-white text-black hover:bg-white/90;
+  }
+  .btn-secondary {
+    @apply border border-line bg-surface-2 text-text hover:bg-elevated;
+  }
+  .btn-ghost {
+    @apply text-muted hover:bg-surface-2 hover:text-text;
+  }
+
+  /* Chip / petite pilule (badges, toggles) */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5
+      text-xs font-medium;
+  }
+
+  /* Champ de formulaire */
+  .field {
+    @apply w-full rounded-field border border-line bg-surface-2 px-3 py-2
+      text-sm text-text outline-none placeholder:text-faint
+      focus:border-white/25;
+  }
 }

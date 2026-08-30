@@ -5,22 +5,50 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "prisma migrate deploy && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "import:carnet": "tsx scripts/import-carnet.ts",
+    "db:dump": "tsx scripts/dump-sqlite.ts",
+    "db:load": "tsx scripts/load-dump.ts"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.3",
+    "@garmin/fitsdk": "^21.214.0",
+    "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/adapter-neon": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "katex": "^0.18.4",
+    "lucide-react": "^1.37.0",
     "next": "16.3.3",
+    "next-auth": "^5.0.0-beta.32",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/katex": "^0.16.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "prisma": "^7.10.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "@prisma/engines@7.10.0": true,
+    "prisma@7.10.0": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "unrs-resolver@1.12.2": true
   }
 }

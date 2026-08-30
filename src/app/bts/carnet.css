@@ -1,0 +1,163 @@
+/*
+  Styles du contenu des notions (blocs métier du carnet).
+  Portés depuis le carnet HTML d'origine, adaptés aux thèmes clair/sombre
+  du cockpit. Tout est limité à .carnet-content pour ne rien déborder.
+  Ces mêmes styles servent en lecture ET dans l'éditeur (WYSIWYG).
+*/
+
+.carnet-content {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+.carnet-content > :first-child {
+  margin-top: 0;
+}
+.carnet-content p {
+  margin: 0.7rem 0;
+}
+.carnet-content b,
+.carnet-content strong {
+  color: var(--text);
+  font-weight: 650;
+}
+.carnet-content ul,
+.carnet-content ol {
+  margin: 0.7rem 0;
+  padding-left: 1.4rem;
+}
+.carnet-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.carnet-content h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 1.2rem 0 0.4rem;
+}
+
+/* Formule */
+.carnet-content .formula {
+  background: color-mix(in srgb, #14b8a6 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, #14b8a6 35%, var(--line));
+  border-radius: 6px;
+  padding: 0.65rem 0.9rem;
+  margin: 0.75rem 0;
+}
+.carnet-content .flabel {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #2dd4bf;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+/* Piège */
+.carnet-content .piege {
+  background: color-mix(in srgb, #ea580c 12%, var(--surface));
+  border-left: 3px solid #ea580c;
+  padding: 0.55rem 0.8rem;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+  margin-top: 0.65rem;
+}
+.carnet-content .piege b {
+  color: #fb923c;
+}
+
+/* Avertissement */
+.carnet-content .warn {
+  background: color-mix(in srgb, #eab308 14%, var(--surface));
+  border-left: 3px solid #ca8a04;
+  padding: 0.55rem 0.8rem;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+  margin-top: 0.65rem;
+}
+.carnet-content .warn b {
+  color: #fbbf24;
+}
+
+/* Référence questions (qref) */
+.carnet-content .qref {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-top: 0.5rem;
+}
+
+/* Schéma (figures + images) */
+.carnet-content .schema {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.65rem;
+  margin: 0.75rem 0;
+  display: flex;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.carnet-content .schema figure {
+  margin: 0;
+  text-align: center;
+}
+.carnet-content .schema img {
+  max-width: 260px;
+  height: auto;
+  border-radius: 3px;
+}
+.carnet-content .schema figcaption {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+}
+
+/* Table de Karnaugh */
+.carnet-content .kmap {
+  border-collapse: collapse;
+  margin: 0.7rem auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+.carnet-content .kmap th,
+.carnet-content .kmap td {
+  border: 1px solid var(--line);
+  width: 34px;
+  height: 30px;
+  text-align: center;
+}
+.carnet-content .kmap th {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 600;
+}
+.carnet-content .kmap td.g1 {
+  background: color-mix(in srgb, #14b8a6 22%, var(--surface));
+  font-weight: 700;
+}
+.carnet-content .kmap td.g2 {
+  background: color-mix(in srgb, #ea580c 22%, var(--surface));
+  font-weight: 700;
+}
+.carnet-content .kmap td.g0 {
+  color: var(--muted);
+}
+.carnet-content .kmap-caption {
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: -0.2rem;
+}
+
+/* KaTeX : garder une taille cohérente avec le texte */
+.carnet-content .katex {
+  font-size: 1.02em;
+}

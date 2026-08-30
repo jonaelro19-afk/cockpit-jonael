@@ -32,6 +32,21 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# prisma (base de données locale + client généré)
+/prisma/dev.db
+/prisma/dev.db-journal
+/src/generated
+
+# skills injectées par "prisma init" (non utilisées)
+/.claude
+/.agents
+/.windsurf
+/skills-lock.json
+
+# artefact ponctuel de migration SQLite → Postgres (contient des jetons)
+/scripts/data-dump.json
 
 # vercel
 .vercel

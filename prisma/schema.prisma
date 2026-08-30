@@ -1,0 +1,307 @@
+// Schéma de la base de données.
+// Docs : https://pris.ly/d/prisma-schema
+// On génère le client dans src/generated/prisma (convention Prisma 7).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  // Postgres partout (base Neon). L'URL vient de prisma.ts / prisma7.config.ts.
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+//  Modèles requis par Auth.js (NextAuth)
+//  L'adapter Prisma y écrit tout seul : utilisateur, session,
+//  et surtout les jetons Google (access_token / refresh_token).
+// ─────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────
+//  Modèles propres au cockpit
+// ─────────────────────────────────────────────
+
+// Un calendrier Google et la façon dont on veut l'utiliser dans l'app.
+model CalendarSource {
+  id               String   @id @default(cuid())
+  googleCalendarId String   @unique
+  label            String
+  // Catégorie d'affichage : "BTS" | "Sport" | "M&J" | "Perso" | "Pause" | "Cours"
+  category         String   @default("Perso")
+  // Afficher les événements de ce calendrier dans l'onglet Timebox ?
+  includeInTimebox Boolean  @default(false)
+  // Rattachement à un module : "sport" | "bts" | "mj" | null (pour plus tard)
+  moduleTag        String?
+  colorHint        String?
+  sortOrder        Int      @default(0)
+  // Passe à false si le calendrier disparaît côté Google.
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Réglages divers, format clé/valeur (valeur = JSON en texte).
+model AppSetting {
+  key   String @id
+  value String
+}
+
+// ─────────────────────────────────────────────
+//  Module BTS : base de connaissances (carnet de notions)
+//  Matière → Chapitre → Notion.  + liens utiles.
+// ─────────────────────────────────────────────
+
+model Subject {
+  id       String    @id // on garde la clé courte : "AII", "MECA"...
+  name     String
+  color    String
+  order    Int       @default(0)
+  chapters Chapter[]
+  links    Link[]
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  subjectId String
+  name      String
+  order     Int      @default(0)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  notions   Notion[]
+
+  @@unique([subjectId, name])
+}
+
+model Notion {
+  id          String          @id @default(cuid())
+  chapterId   String
+  slug        String // id d'ancre d'origine ("detecteurs-photoelectriques")
+  term        String
+  oneliner    String          @default("")
+  contentHtml String          @default("")
+  bookmarked  Boolean         @default(false) // "à revoir"
+  order       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  chapter     Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  versions    NotionVersion[]
+
+  @@unique([chapterId, slug])
+}
+
+model NotionVersion {
+  id          String   @id @default(cuid())
+  notionId    String
+  term        String
+  oneliner    String
+  contentHtml String
+  createdAt   DateTime @default(now())
+  notion      Notion   @relation(fields: [notionId], references: [id], onDelete: Cascade)
+}
+
+model Link {
+  id          String   @id @default(cuid())
+  subjectId   String?
+  name        String
+  url         String
+  description String   @default("")
+  order       Int      @default(0)
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+}
+
+// ─────────────────────────────────────────────
+//  Module Sport : séances (saisie manuelle ou import de fichier .FIT/.GPX)
+// ─────────────────────────────────────────────
+
+model SportActivity {
+  id          String   @id @default(cuid())
+  date        DateTime // début de la séance
+  type        String   @default("Course") // "Course" | "Vélo" | "Muscu" | "Autre"
+  title       String   @default("")
+  durationSec Int      @default(0)
+  distanceM   Float? // distance en mètres
+  elevationM  Float? // dénivelé positif en mètres
+  avgHr       Int?
+  maxHr       Int?
+  calories    Int?
+  effort      Int? // ressenti 1 (dur) à 5 (au top)
+  notes       String   @default("")
+  source      String   @default("manual") // "manual" | "fit" | "gpx"
+  externalId  String?  @unique // hash du fichier importé, pour éviter les doublons
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WeeklyReport {
+  id        String   @id @default(cuid())
+  weekStart DateTime @unique // lundi 00:00 (UTC) de la semaine concernée
+  content   String // bilan rédigé (HTML)
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────
+//  Module M&J Production : clients + projets (agence photo/vidéo)
+// ─────────────────────────────────────────────
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  address   String?
+  notes     String    @default("")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+  quotes    Quote[]
+}
+
+model Project {
+  id        String    @id @default(cuid())
+  clientId  String?
+  title     String
+  kind      String    @default("Vidéo") // "Photo" | "Vidéo" | "Photo + Vidéo"
+  // "Devis" | "Confirmé" | "Tournage" | "Montage" | "Livré" | "Annulé"
+  status    String    @default("Devis")
+  shootDate DateTime? // date de tournage / prise de vue
+  deadline  DateTime? // date de livraison attendue
+  budgetEur Int?
+  notes     String    @default("")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  client    Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+}
+
+// ─────────────────────────────────────────────
+//  Devis
+// ─────────────────────────────────────────────
+
+model Quote {
+  id         String      @id @default(cuid())
+  number     String      @unique // "2026-001"
+  clientId   String?
+  title      String      @default("")
+  issuedAt   DateTime    @default(now())
+  validUntil DateTime?
+  // "Brouillon" | "Envoyé" | "Accepté" | "Refusé"
+  status     String      @default("Brouillon")
+  vatRate    Float       @default(0) // % TVA (0 = non applicable, auto-entrepreneur)
+  notes      String      @default("") // conditions, mentions légales
+  // Facturation : si invoiceNumber est renseigné, le devis est devenu une facture.
+  // (unicité assurée côté application, cf. nextInvoiceNumber)
+  invoiceNumber String?
+  invoicedAt    DateTime?
+  dueAt         DateTime? // échéance de paiement de la facture
+  paidAt        DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  client     Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  lines      QuoteLine[]
+}
+
+model QuoteLine {
+  id        String @id @default(cuid())
+  quoteId   String
+  label     String
+  detail    String @default("")
+  quantity  Float  @default(1)
+  unit      String @default("forfait") // forfait, jour, heure, photo…
+  unitPrice Float  @default(0) // € HT
+  position  Int    @default(0)
+  quote     Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+// Grille de tarifs de référence, réutilisable dans les devis.
+model TarifItem {
+  id        String @id @default(cuid())
+  label     String
+  unit      String @default("forfait")
+  unitPrice Float  @default(0)
+  category  String @default("")
+  position  Int    @default(0)
+}
+
+// ─────────────────────────────────────────────
+//  Suivi matériel (possédé + liste d'achats)
+// ─────────────────────────────────────────────
+
+model Equipment {
+  id          String    @id @default(cuid())
+  name        String
+  category    String    @default("Autre")
+  // "possédé" | "à acheter"
+  status      String    @default("possédé")
+  reference   String? // modèle / n° de série
+  condition   String? // neuf | bon | usé | à réviser | HS
+  priceEur    Int? // prix d'achat OU prix estimé
+  priority    Int       @default(2) // wishlist : 1 haute, 2 moyenne, 3 basse
+  url         String? // lien produit
+  purchasedAt DateTime?
+  notes       String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ─────────────────────────────────────────────
+//  Tâches — transverses à tous les modules
+// ─────────────────────────────────────────────
+
+model Task {
+  id        String    @id @default(cuid())
+  title     String
+  done      Boolean   @default(false)
+  dueDate   DateTime?
+  // "bts" | "sport" | "mj" | "gmail" | "perso" | null
+  module    String?
+  link      String? // lien interne, ex. /mj/projets/xxx
+  notes     String    @default("")
+  doneAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
