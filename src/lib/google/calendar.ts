@@ -20,30 +20,45 @@ export async function listEvents(opts: {
   calendarId: string;
   timeMin: string; // ISO 8601
   timeMax: string; // ISO 8601
+  maxPages?: number; // sécurité pour les vues larges (mois / année)
 }): Promise<GoogleEvent[]> {
-  const url = new URL(
-    `${BASE}/calendars/${encodeURIComponent(opts.calendarId)}/events`,
-  );
-  url.searchParams.set("singleEvents", "true");
-  url.searchParams.set("orderBy", "startTime");
-  url.searchParams.set("timeMin", opts.timeMin);
-  url.searchParams.set("timeMax", opts.timeMax);
-  url.searchParams.set("maxResults", "100");
+  const maxPages = opts.maxPages ?? 1;
+  const items: GoogleEvent[] = [];
+  let pageToken: string | undefined;
 
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${opts.accessToken}` },
-    // Cache Next.js : on ne rappelle pas Google plus d'une fois toutes les 5 min.
-    next: { revalidate: 300 },
-  });
-
-  if (!res.ok) {
-    throw new Error(
-      `Google Calendar (${opts.calendarId}) a répondu ${res.status}`,
+  for (let page = 0; page < maxPages; page++) {
+    const url = new URL(
+      `${BASE}/calendars/${encodeURIComponent(opts.calendarId)}/events`,
     );
+    url.searchParams.set("singleEvents", "true");
+    url.searchParams.set("orderBy", "startTime");
+    url.searchParams.set("timeMin", opts.timeMin);
+    url.searchParams.set("timeMax", opts.timeMax);
+    url.searchParams.set("maxResults", "250");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${opts.accessToken}` },
+      // Cache Next.js : on ne rappelle pas Google plus d'une fois toutes les 5 min.
+      next: { revalidate: 300 },
+    });
+
+    if (!res.ok) {
+      throw new Error(
+        `Google Calendar (${opts.calendarId}) a répondu ${res.status}`,
+      );
+    }
+
+    const data = (await res.json()) as {
+      items?: GoogleEvent[];
+      nextPageToken?: string;
+    };
+    items.push(...(data.items ?? []));
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
   }
 
-  const data = (await res.json()) as { items?: GoogleEvent[] };
-  return data.items ?? [];
+  return items;
 }
 
 export type GoogleCalendarListEntry = {

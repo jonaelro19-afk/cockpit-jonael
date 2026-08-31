@@ -1,5 +1,5 @@
-// Charge les blocs horaires d'une journée depuis Google Agenda.
-// Utilisé par la page Timebox ET par le Dashboard.
+// Charge les blocs horaires depuis Google Agenda.
+// Utilisé par la page Timebox (jour / semaine / mois / année) ET par le Dashboard.
 
 import { prisma } from "@/lib/prisma";
 import { getGoogleAccessToken } from "@/lib/google/token";
@@ -8,7 +8,7 @@ import { toTimeBlock } from "@/lib/google/toTimeBlocks";
 import { parisDayRange } from "@/lib/date";
 import type { BlockCategory, TimeBlock, TimeboxCalendar } from "@/lib/types";
 
-export type DayResult =
+export type RangeResult =
   | { status: "reconnect" }
   | {
       status: "ok";
@@ -18,10 +18,16 @@ export type DayResult =
       calendars: TimeboxCalendar[];
     };
 
-export async function loadDay(
+// Alias historique (le Dashboard l'importe).
+export type DayResult = RangeResult;
+
+// Charge les événements entre deux dates "AAAA-MM-JJ" incluses.
+export async function loadRange(
   userId: string,
-  date: string,
-): Promise<DayResult> {
+  startDate: string,
+  endDate: string,
+  opts: { maxPages?: number } = {},
+): Promise<RangeResult> {
   const token = await getGoogleAccessToken(userId);
   if (!token.accessToken) return { status: "reconnect" };
   const accessToken = token.accessToken;
@@ -31,21 +37,27 @@ export async function loadDay(
     orderBy: { sortOrder: "asc" },
   });
 
-  const { timeMin, timeMax } = parisDayRange(date);
+  const { timeMin } = parisDayRange(startDate);
+  const { timeMax } = parisDayRange(endDate);
 
   const results = await Promise.allSettled(
     sources.map((s) =>
-      listEvents({ accessToken, calendarId: s.googleCalendarId, timeMin, timeMax }).then(
-        (events) =>
-          events
-            .map((e) =>
-              toTimeBlock(e, {
-                googleCalendarId: s.googleCalendarId,
-                label: s.label,
-                category: s.category,
-              }),
-            )
-            .filter((b): b is TimeBlock => b !== null),
+      listEvents({
+        accessToken,
+        calendarId: s.googleCalendarId,
+        timeMin,
+        timeMax,
+        maxPages: opts.maxPages ?? 1,
+      }).then((events) =>
+        events
+          .map((e) =>
+            toTimeBlock(e, {
+              googleCalendarId: s.googleCalendarId,
+              label: s.label,
+              category: s.category,
+            }),
+          )
+          .filter((b): b is TimeBlock => b !== null),
       ),
     ),
   );
@@ -60,11 +72,16 @@ export async function loadDay(
     allDay: blocks.filter((b) => b.allDay),
     timed: blocks
       .filter((b) => !b.allDay)
-      .sort((a, b) => a.startMin - b.startMin),
+      .sort((a, b) => a.date.localeCompare(b.date) || a.startMin - b.startMin),
     calendars: sources.map((s) => ({
       googleCalendarId: s.googleCalendarId,
       label: s.label,
       category: s.category as BlockCategory,
     })),
   };
+}
+
+// Une seule journée (raccourci).
+export function loadDay(userId: string, date: string): Promise<RangeResult> {
+  return loadRange(userId, date, date);
 }

@@ -1,11 +1,15 @@
 import type { TimeBlock } from "@/lib/types";
 import { toMinutes } from "@/lib/timebox-shared";
+import { todayInParis } from "@/lib/date";
 
 /*
   Données d'exemple de secours (fallback), affichées uniquement quand
   Google Agenda n'est pas connecté.
 */
-type Raw = Omit<TimeBlock, "allDay" | "calendarId" | "startMin" | "endMin">;
+type Raw = Omit<
+  TimeBlock,
+  "allDay" | "calendarId" | "startMin" | "endMin" | "date"
+>;
 
 const raw: Raw[] = [
   { id: "t1", start: "07:00", end: "07:45", title: "Course à pied — 8 km", category: "Sport", source: "exemple" },
@@ -21,6 +25,7 @@ const raw: Raw[] = [
 
 export const timeBlocks: TimeBlock[] = raw.map((b) => ({
   ...b,
+  date: todayInParis(),
   allDay: false,
   calendarId: "exemple",
   startMin: toMinutes(b.start),

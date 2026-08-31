@@ -14,6 +14,40 @@ export function addDays(dateStr: string, days: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "UTC" }).format(d);
 }
 
+// Décale une date "AAAA-MM-JJ" de `months` mois (garde un jour valide).
+export function addMonths(dateStr: string, months: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const base = new Date(Date.UTC(y, m - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  base.setUTCDate(Math.min(d, lastDay));
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "UTC" }).format(base);
+}
+
+export function addYears(dateStr: string, years: number): string {
+  return addMonths(dateStr, years * 12);
+}
+
+// Premier jour du mois de `dateStr`.
+export function firstOfMonth(dateStr: string): string {
+  return `${dateStr.slice(0, 7)}-01`;
+}
+
+// 7 dates "AAAA-MM-JJ" de la semaine (lundi → dimanche) contenant `dateStr`.
+export function weekDays(dateStr: string): string[] {
+  const monday = mondayOf(dateStr);
+  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+}
+
+// Toutes les dates d'une grille de mois (6 semaines, lundi → dimanche),
+// débordant sur les mois voisins comme un vrai calendrier.
+export function monthGridDays(dateStr: string): string[] {
+  const first = firstOfMonth(dateStr);
+  const start = mondayOf(first);
+  return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+}
+
 // Intervalle [00:00, 24:00[ d'une journée parisienne, en instants ISO (UTC).
 // Gère automatiquement l'heure d'été / d'hiver.
 export function parisDayRange(dateStr: string): { timeMin: string; timeMax: string } {

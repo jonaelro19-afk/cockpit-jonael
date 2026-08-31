@@ -10,6 +10,7 @@ export type BlockCategory = "BTS" | "Sport" | "M&J" | "Perso" | "Pause" | "Cours
 
 export type TimeBlock = {
   id: string;
+  date: string; // jour de l'événement "AAAA-MM-JJ" (fuseau Paris)
   start: string; // heure de début "08:00" (vide si journée entière)
   end: string; // heure de fin "09:30" (vide si journée entière)
   startMin: number; // minutes depuis 00:00 (Paris) — pour placer la boîte sur la grille

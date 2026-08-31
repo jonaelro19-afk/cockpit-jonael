@@ -12,9 +12,18 @@ const partsFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: TIME_ZONE,
 });
 
+const dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE });
+
 // "08:05" (heure locale de Paris) à partir d'un instant ISO.
 function hhmm(iso: string): string {
   return partsFmt.format(new Date(iso));
+}
+
+// "AAAA-MM-JJ" (jour local de Paris) à partir d'un instant ISO ou d'une date.
+function dayKey(iso: string): string {
+  // Un "all-day" a déjà la forme "AAAA-MM-JJ" : on la garde telle quelle.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  return dayFmt.format(new Date(iso));
 }
 
 // Minutes depuis minuit (Paris) — utilisé pour positionner la boîte sur la grille.
@@ -53,6 +62,7 @@ export function toTimeBlock(
 
   return {
     id: event.id,
+    date: dayKey(startISO),
     title: event.summary?.trim() || "(sans titre)",
     category: calendar.category as BlockCategory,
     source: calendar.label,
