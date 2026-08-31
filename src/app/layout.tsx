@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import MobileHeader from "@/components/MobileHeader";
 import AuthStatus from "@/components/AuthStatus";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
         <MobileNav />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
