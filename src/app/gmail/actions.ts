@@ -4,12 +4,18 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { getGoogleAccessToken } from "@/lib/google/token";
-import { listInbox, archiveMessages, type Bucket } from "@/lib/google/gmail";
+import { archiveMessages, type Bucket } from "@/lib/google/gmail";
+import { loadInbox } from "@/lib/gmail-inbox";
 
-async function tokenOrThrow() {
+async function sessionOrThrow() {
   const session = await auth();
   if (!session?.user) throw new Error("Non autorisé");
-  const t = await getGoogleAccessToken(session.user.id);
+  return session.user.id;
+}
+
+async function tokenOrThrow() {
+  const userId = await sessionOrThrow();
+  const t = await getGoogleAccessToken(userId);
   if (!t.accessToken) throw new Error("Accès Google indisponible");
   return t.accessToken;
 }
@@ -23,8 +29,11 @@ export async function archiveMail(id: string) {
 
 // Archive tout un panier ("bruit" ou "avoir").
 export async function archiveBucket(bucket: Bucket) {
-  const accessToken = await tokenOrThrow();
-  const inbox = await listInbox({ accessToken, max: 60 });
+  const userId = await sessionOrThrow();
+  const [accessToken, inbox] = await Promise.all([
+    tokenOrThrow(),
+    loadInbox(userId),
+  ]);
   if (!inbox.ok) return;
   const ids = inbox.mails.filter((m) => m.bucket === bucket).map((m) => m.id);
   await archiveMessages({ accessToken, ids });

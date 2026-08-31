@@ -7,8 +7,7 @@ import MailRow from "./MailRow";
 import ArchiveBucketButton from "./ArchiveBucketButton";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getGoogleAccessToken } from "@/lib/google/token";
-import { listInbox } from "@/lib/google/gmail";
+import { loadInbox } from "@/lib/gmail-inbox";
 
 const GCP_PROJECT = "455691093694";
 
@@ -31,8 +30,8 @@ export default async function GmailPage() {
     );
   }
 
-  const [token, account] = await Promise.all([
-    getGoogleAccessToken(session.user.id),
+  const [result, account] = await Promise.all([
+    loadInbox(session.user.id),
     prisma.account.findFirst({
       where: { userId: session.user.id, provider: "google" },
       select: { scope: true },
@@ -40,11 +39,22 @@ export default async function GmailPage() {
   ]);
   const canArchive = account?.scope?.includes("gmail.modify") ?? false;
 
-  const result = token.accessToken
-    ? await listInbox({ accessToken: token.accessToken, max: 60 })
-    : ({ ok: false, reason: "scope" } as const);
-
   if (!result.ok) {
+    if (result.reason === "reconnect") {
+      return (
+        <>
+          <PageHeader title="Gmail" subtitle="Accès à finaliser" />
+          <Card>
+            <EmptyState
+              Icon={Mail}
+              title="Compte Google à reconnecter"
+              hint="L'accès à Gmail doit être renouvelé."
+              action={<SignInWithGoogle callbackUrl="/gmail" />}
+            />
+          </Card>
+        </>
+      );
+    }
     return (
       <>
         <PageHeader title="Gmail" subtitle="Accès à finaliser" />
@@ -108,7 +118,7 @@ export default async function GmailPage() {
     <>
       <PageHeader
         title="Gmail"
-        subtitle={`${mails.length} non lus · ${important.length} importants · ${bruit.length} bruit`}
+        subtitle={`${mails.length} non lus · ${important.length} importants · ${bruit.length} pubs`}
       />
 
       {!canArchive && (
@@ -159,18 +169,18 @@ export default async function GmailPage() {
         </Card>
       )}
 
-      {/* BRUIT — à archiver */}
+      {/* BRUIT — pubs / offres / sponsors, à archiver */}
       {bruit.length > 0 && (
         <Card
-          title={`Bruit — ${bruit.length}`}
+          title={`Pubs & offres — ${bruit.length}`}
           className="mb-5"
           action={
             canArchive && <ArchiveBucketButton bucket="bruit" count={bruit.length} />
           }
         >
           <p className="mb-3 text-xs text-muted">
-            Newsletters, promos, notifications. Les archiver les retire de la
-            boîte (ils restent dans « Tous les messages »).
+            Uniquement des pubs, promos et démarchages sponsor. Les archiver les
+            retire de la boîte (ils restent dans « Tous les messages »).
           </p>
           <ul className="divide-y divide-line">
             {bruit.map((m) => (
@@ -190,12 +200,13 @@ export default async function GmailPage() {
       >
         <p className="text-sm text-muted">
           Seuls les mails <b>non lus reçus à partir du 30/07/2026</b> sont
-          affichés (l&apos;ancien backlog est laissé de côté). Classés par règles :
-          factures / RDV / argent et messages de personnes →
-          <span className="text-live"> importants</span> ; organismes, colis,
-          codes → à voir ; promos, réseaux sociaux, newsletters → bruit. Une fois
-          l&apos;app en ligne, une routine Claude affinera ça et archivera le
-          bruit chaque matin.
+          affichés. Règle : <b>seules les pubs, offres et démarchages sponsor</b>{" "}
+          sont mis de côté pour archivage. <b>Tout le reste</b> — vraies
+          personnes, organismes, scouts, ce qui touche à M&amp;J Production,
+          tes clients — passe en{" "}
+          <span className="text-live">important</span>, pour ne rien louper.
+          Codes et suivis de livraison vont dans « À voir » (gardés, jamais
+          archivés).
         </p>
       </Card>
     </>

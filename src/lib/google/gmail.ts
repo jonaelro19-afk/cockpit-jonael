@@ -49,96 +49,118 @@ function parseFrom(raw: string): { name: string; email: string } {
   return { name: raw.trim(), email: raw.trim().toLowerCase() };
 }
 
+// ─────────────────────────────────────────────────────────────
+//  Règle de tri (voulue par Jonael, 31/08/2026) :
+//  « Seules les PUBS / OFFRES / SPONSORS sont archivées.
+//    Tout le reste est gardé et mis en IMPORTANT — il ne faut
+//    rien louper. Dans le doute → important. »
+// ─────────────────────────────────────────────────────────────
+
+// Ce qui concerne l'entreprise de Jonael → toujours important.
+const BUSINESS =
+  /\bm\s*&\s*j\b|\bm\s*et\s*j\b|m&j\s*production|mj\s*production|mjproduction|m-j-production/i;
+
+// Expéditeur "sans réponse" typique des envois automatiques de masse.
 const NOREPLY =
-  /(no-?reply|do-?not-?reply|donotreply|noreply|nepasrepondre|ne-pas-repondre|notif|newsletter|mailer|mailing|marketing|campaign)/i;
+  /(no-?reply|do-?not-?reply|donotreply|noreply|nepasrepondre|ne-pas-repondre|mailer-daemon|newsletter@|news@|marketing@|hello@|info@|contact@|team@|updates?@|notif)/i;
 
-// Expéditeurs "réseaux sociaux / marketing pur" → bruit sans hésiter.
+// Argent / RDV / administratif : on ne rate jamais ça.
+const KEEP =
+  /(factur|\bdevis\b|remboursement|virement|paiement|\bpay[ée]e?\b|[ée]ch[ée]ance|pr[ée]l[èe]vement|rendez.?vous|\brdv\b|convocation|contrat|\bimp[oô]ts?\b|mise en demeure|\brelance\b|\b[àa] r[ée]gler\b|bulletin de (paie|salaire)|attestation|r[ée]siliation|re[çc]u fiscal|dossier|candidature|entretien|convention de stage|inscription)/i;
+
+// Sujets/contenus clairement promotionnels.
+const PROMO =
+  /(-\s?\d{1,3}\s?%|\bpromo(tion|s)?\b|\bsoldes?\b|\boffres?\b(?!\s+d'?emploi)|derni[èe]re?s?\s+(jour|heures?|chance)|\bgratuit\b|d[ée]couvrez\s+(nos|notre|la|le|le\s|nouvelle)|profitez\s+(de|d'?en)|ventes?\s+priv[ée]e?s?|black\s?friday|cyber\s?monday|code\s+promo|\bdeals?\b|\br[ée]ductions?\b|\bremises?\b|d[ée]bloquez\s+(vos|votre)|\b[ée]conomisez\b|d[ée]stockage|liquidation|jusqu'?[àa]\s?-?\s?\d|\bnewsletter\b|votre\s+s[ée]lection|nos\s+(recommandations|nouveaut[ée]s|conseils)|meilleures?\s+ventes|flash\s+sale|prix\s+cass[ée]s|bon\s+plan|\bchallenge\b|\bwebinar\b|\bwebinaire\b|here\s+we\s+go|c'?est\s+parti|\bcashback\b|parrainage|invitez\s+vos|cadeau)/i;
+
+// Démarchage sponsor / partenariat rémunéré / affiliation.
+const SPONSOR_SPAM =
+  /(sponsoris|partenariat\s+r[ée]mun[ée]r|collaboration\s+(commerciale|r[ée]mun[ée]r)|placement\s+de\s+produit|programme\s+d'?affiliation|devenez\s+(notre\s+)?partenaire|gagnez\s+de\s+l'?argent|opportunit[ée]\s+d'?affaires|augmentez\s+votre\s+(chiffre|ca)|boostez\s+votre\s+(visibilit[ée]|business|activit[ée])|campagne\s+d'?influence|nous\s+aimerions\s+vous\s+sponsoriser|proposition\s+de\s+partenariat)/i;
+
+// Réseaux sociaux / plateformes → notifications marketing.
 const SOCIAL_MARKETING =
-  /(linkedin|instagram|facebook|twitter|x\.com|tiktok|pinterest|snapchat|meetup|strava\.com|h&m|zalando|shein|asos|alltricks|decathlon.*(promo|offre)|monday\.com)/i;
-const PROMO_SUBJECT =
-  /(-\s?\d{1,3}\s?%|jusqu'?[àa]\s?-?\s?\d|\bpromos?\b|\bsoldes?\b|\boffres?\b|dernier jour|derni[èe]re chance|\bgratuit\b|d[ée]couvrez|\bnewsletter\b|ventes? priv[ée]e?s?|black friday|code promo|\bdeals?\b|\br[ée]duction|\b[ée]conomisez)/i;
-// Messages de marketplace (leboncoin, vinted…) = un acheteur potentiel → à voir.
-const MARKETPLACE_MSG =
-  /(nouveau message|message pour|a r[ée]pondu|vous a envoy[ée] un message)/i;
+  /(linkedin|instagram|facebook|twitter|x\.com|tiktok|pinterest|snapchat|meetup|strava|youtube|twitch|chess\.com|duolingo|spotify|deezer|pinterest)/i;
 
-// Institutions / services dont les mails comptent (au minimum "à voir").
-const INSTITUTION =
-  /(doctolib|\bmgen\b|ameli|cpam|\bcaf\b|crous|impots?\.gouv|urssaf|pole-?emploi|francetravail|service-public|etudiant\.gouv|laposte|colissimo|chronopost|mondialrelay|mondial-relay|relais colis|banque|\bcredit\b|\bcaisse\b|bourso|boursobank|boursorama|qonto|\bshine\b|revolut|paypal|scouts? et guides|sgdf|v[éeô]l[ôo]toulouse|tiss[ée]o)/i;
-// Souscription / abonnement / adhésion → à voir.
-const SUBSCRIPTION =
-  /(souscription|abonnement|confirmation d'inscription|adh[ée]sion|renouvellement)/i;
+// Organismes dont les mails comptent toujours (jamais archivés).
+const PROTECTED =
+  /(doctolib|\bmgen\b|ameli|cpam|\bcaf\b|crous|impots?\.gouv|impots?\.fr|urssaf|france\s?travail|pole.?emploi|service.?public|ants\.gouv|laposte|colissimo|chronopost|mondial.?relay|relais\s?colis|\bbanque\b|\bcr[ée]dit\b|caisse\s?d'?[ée]pargne|bourso|boursobank|boursorama|qonto|\bshine\b|revolut|\bn26\b|lydia|\blcl\b|\bbnp\b|soci[ée]t[ée]\s?g[ée]n[ée]rale|scouts?\s?et\s?guides|\bsgdf\b|guides?\s?de\s?france|v[éeô]l[ôo]?\s?toulouse|tiss[ée]o|greffe|tribunal|notaire|huissier|\bmaif\b|\bmacif\b|\bmatmut\b|harmonie\s?mutuelle|\bedf\b|\bengie\b|\bcnous\b|caf\.fr|assurance.?maladie|s[ée]curit[ée]\s?sociale|prefecture|mairie|acad[ée]mie|rectorat|\bbts\b|lyc[ée]e|greta|afpa|cci\b)/i;
 
-// Contenu transactionnel important (facture, RDV, argent, sécurité).
-const HIGH_VALUE =
-  /(rendez-?vous|\brdv\b|factur|\bdevis\b|remboursement|virement|paiement|\bpay[ée]\b|\bimp[oô]ts?\b|contrat sign|convocation|\brejet\b|refus[ée] (votre|la)|validation de votre demande|bulletin de paie|mise en demeure|\bimpay[ée]\b|\brelance\b|\b[àa] r[ée]gler\b)/i;
-// Voyage / transport → important (billet, trajet, embarquement).
-const TRAVEL =
-  /(voyage|trajet|\bvol\b|embarquement|itin[ée]raire|check-?in|carte d'embarquement|billet|r[ée]servation confirm|votre s[ée]jour|votre r[ée]servation)/i;
-// Suivi routinier (à voir mais pas urgent).
-const ROUTINE_TXN =
-  /(colis|livraison|commande|exp[ée]di[ée]|num[ée]ro de suivi|code (de |d')?(v[ée]rification|connexion|acc[èe]s|s[ée]curit[ée])|code d'acc[èe]s|alerte de connexion|nouvelle connexion|confirmation de commande)/i;
-
-// "Prénom Nom" (2–3 mots, chacun capitalisé, pas de sigle en CAPS, pas de chiffre)
+// "Prénom Nom" — 2–3 mots, chacun commençant par une majuscule.
+// (tolère un nom de famille tout en capitales : « Cédric ROUTABOUL »)
 const PERSON_NAME =
-  /^[A-ZÀ-Ÿ][a-zà-ÿ'’-]+(?:\s+[A-ZÀ-Ÿ][a-zà-ÿ'’-]+){1,2}$/;
+  /^[A-ZÀ-Ÿ][A-Za-zà-ÿÀ-Ÿ'’-]+(?:\s+[A-ZÀ-Ÿ][A-Za-zà-ÿÀ-Ÿ'’-]+){1,2}$/;
+const BRAND_WORDS =
+  /(fid[ée]lit[ée]|\bclub\b|\bteam\b|[ée]quipe|\bshop\b|\bstore\b|\bnews\b|contact|support|\binfo\b|hello|jobs?|service|noreply|newsletter|marketing|alertes?|notification)/i;
+
+// Automatique mais utile → "à voir" (jamais archivé).
+const ROUTINE =
+  /(code\s+(de\s+)?(v[ée]rification|confirmation|s[ée]curit[ée]|connexion|acc[èe]s)|verification\s+code|votre\s+code|code\s+[àa]\s+usage\s+unique|\botp\b|mot\s+de\s+passe|colis\s+(livr[ée]|exp[ée]di[ée])|commande\s+(exp[ée]di[ée]e|livr[ée]e|confirm[ée]e)|votre\s+commande\s+a\s+[ée]t[ée]|num[ée]ro\s+de\s+suivi|suivi\s+de\s+(votre\s+)?(commande|livraison|colis)|nouvelle\s+connexion|alerte\s+de\s+connexion)/i;
 
 function classify(m: {
   labelIds: Set<string>;
   fromEmail: string;
   fromName: string;
   subject: string;
+  snippet: string;
   listUnsub: boolean;
+  boost: string[]; // mots-clés (M&J, noms de clients…) qui forcent "important"
 }): { bucket: Bucket; reason: string } {
   const L = m.labelIds;
   const who = `${m.fromName} ${m.fromEmail}`;
-  const subj = m.subject;
+  const hay = `${m.fromName} ${m.fromEmail} ${m.subject} ${m.snippet}`;
+  const hayLow = hay.toLowerCase();
+  const subjSnip = `${m.subject} ${m.snippet}`;
 
-  const personal = L.has("CATEGORY_PERSONAL");
-  // Vraie personne qui écrit directement : pas de lien de désinscription
-  // (les newsletters/séquences marketing en ont toujours un), et soit
-  // Gmail le range en "Personnel", soit le nom ressemble à "Prénom Nom".
-  const looksLikePerson =
-    !m.listUnsub &&
-    !NOREPLY.test(m.fromEmail) &&
-    (personal ||
-      (PERSON_NAME.test(m.fromName.trim()) &&
-        !/(fid[ée]lit[ée]|club|team|[ée]quipe|shop|store|news|contact|support|info|hello|jobs?)/i.test(
-          m.fromName,
-        )));
-
-  const isPromo =
-    L.has("CATEGORY_PROMOTIONS") ||
-    L.has("CATEGORY_SOCIAL") ||
-    L.has("CATEGORY_FORUMS") ||
-    SOCIAL_MARKETING.test(who) ||
-    PROMO_SUBJECT.test(subj);
-
-  // 1. Signaux forts d'importance (jamais si c'est une promo)
+  // ── 0. Signaux qui forcent "important", quoi qu'il arrive ──────────
+  if (BUSINESS.test(hay))
+    return { bucket: "important", reason: "concerne M&J Production" };
+  if (m.boost.some((k) => k.length >= 4 && hayLow.includes(k.toLowerCase())))
+    return { bucket: "important", reason: "contact / client connu" };
   if (L.has("STARRED")) return { bucket: "important", reason: "suivi (★)" };
-  if (!isPromo && HIGH_VALUE.test(subj))
-    return { bucket: "important", reason: "facture / RDV / argent" };
-  if (!isPromo && TRAVEL.test(subj))
-    return { bucket: "important", reason: "voyage / billet" };
+  if (KEEP.test(subjSnip))
+    return { bucket: "important", reason: "argent / RDV / administratif" };
+
+  const looksLikePerson =
+    !NOREPLY.test(m.fromEmail) &&
+    !m.listUnsub &&
+    (L.has("CATEGORY_PERSONAL") ||
+      (PERSON_NAME.test(m.fromName.trim()) && !BRAND_WORDS.test(m.fromName)));
   if (looksLikePerson)
     return { bucket: "important", reason: "message d'une personne" };
 
-  // 2. Promo / réseau social = bruit d'office
-  if (isPromo) return { bucket: "bruit", reason: "promo / réseau social" };
+  // ── 1. Organismes / institutions → important (jamais au rebut) ─────
+  if (PROTECTED.test(who))
+    return { bucket: "important", reason: "organisme / administration" };
 
-  // 3. À voir : organismes, marketplace, suivi de commande, codes, abonnements
-  if (MARKETPLACE_MSG.test(subj))
-    return { bucket: "avoir", reason: "message marketplace" };
-  if (INSTITUTION.test(who))
-    return { bucket: "avoir", reason: "organisme / service" };
-  if (ROUTINE_TXN.test(subj))
-    return { bucket: "avoir", reason: "suivi de commande / code" };
-  if (SUBSCRIPTION.test(subj) && !PROMO_SUBJECT.test(subj))
-    return { bucket: "avoir", reason: "abonnement / adhésion" };
+  // ── 2. Automatique mais utile (code, livraison) → à voir ──────────
+  if (ROUTINE.test(subjSnip))
+    return { bucket: "avoir", reason: "code / suivi de livraison" };
 
-  // 4. Newsletter / notification / automatique → bruit
-  if (m.listUnsub || L.has("CATEGORY_UPDATES"))
-    return { bucket: "bruit", reason: "newsletter / notification" };
-  return { bucket: "bruit", reason: "expéditeur automatique" };
+  // ── 3. PUB / OFFRE / SPONSOR / newsletter marketing → bruit ───────
+  const socialNotif =
+    (L.has("CATEGORY_SOCIAL") || SOCIAL_MARKETING.test(who)) &&
+    !L.has("CATEGORY_PERSONAL");
+  // Envoi de masse marketing : lien de désinscription + rangé par Gmail en
+  // Promotions/Forums, ou expéditeur de type newsletter, ET ton marketing.
+  const marketingBlast =
+    m.listUnsub &&
+    (L.has("CATEGORY_PROMOTIONS") ||
+      L.has("CATEGORY_FORUMS") ||
+      (NOREPLY.test(m.fromEmail) &&
+        /(newsletter|actus?|magazine|s[ée]lection|hebdo|mensuel|[ée]dition|nouveaut[ée]s|[àa]\s+ne\s+pas\s+manquer|le\s+best\s+of|au\s+programme)/i.test(
+          subjSnip,
+        )));
+
+  if (SPONSOR_SPAM.test(hay))
+    return { bucket: "bruit", reason: "démarchage sponsor" };
+  if (L.has("CATEGORY_PROMOTIONS") || PROMO.test(subjSnip))
+    return { bucket: "bruit", reason: "pub / offre" };
+  if (socialNotif)
+    return { bucket: "bruit", reason: "notification réseau social" };
+  if (marketingBlast)
+    return { bucket: "bruit", reason: "newsletter / envoi de masse" };
+
+  // ── 4. Dans le doute : on garde et on met en avant ───────────────
+  return { bucket: "important", reason: "à ne pas manquer" };
 }
 
 function classifyStatus(status: number, body: string): InboxResult & { ok: false } {
@@ -152,8 +174,11 @@ function classifyStatus(status: number, body: string): InboxResult & { ok: false
 export async function listInbox(opts: {
   accessToken: string;
   max?: number;
+  boostKeywords?: string[];
 }): Promise<InboxResult> {
-  // Uniquement les mails NON LUS de la boîte de réception.
+  const boost = opts.boostKeywords ?? [];
+
+  // Uniquement les mails NON LUS de la boîte, reçus après la date de bascule.
   const listRes = await fetch(
     `${BASE}/messages?maxResults=${opts.max ?? 60}&q=${encodeURIComponent(
       `in:inbox is:unread after:${MAIL_CUTOFF}`,
@@ -182,12 +207,15 @@ export async function listInbox(opts: {
       const { name, email } = parseFrom(header(msg, "From"));
       const labelIds = new Set(msg.labelIds ?? []);
       const subject = header(msg, "Subject") || "(sans objet)";
+      const snippet = (msg.snippet ?? "").replace(/&#39;/g, "'");
       const { bucket, reason } = classify({
         labelIds,
         fromEmail: email,
         fromName: name,
         subject,
+        snippet,
         listUnsub: Boolean(header(msg, "List-Unsubscribe")),
+        boost,
       });
       return {
         id: msg.id,
@@ -195,7 +223,7 @@ export async function listInbox(opts: {
         from: name,
         fromEmail: email,
         subject,
-        snippet: (msg.snippet ?? "").replace(/&#39;/g, "'"),
+        snippet,
         date: msg.internalDate
           ? new Date(Number(msg.internalDate)).toISOString()
           : new Date().toISOString(),
