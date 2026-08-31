@@ -12,12 +12,21 @@ export type TimeBlock = {
   id: string;
   start: string; // heure de début "08:00" (vide si journée entière)
   end: string; // heure de fin "09:30" (vide si journée entière)
+  startMin: number; // minutes depuis 00:00 (Paris) — pour placer la boîte sur la grille
+  endMin: number; // minutes depuis 00:00 (Paris)
   title: string;
   category: BlockCategory;
   source: string; // nom du calendrier Google d'origine (ROUTINE, SPORT, BTS...)
   allDay: boolean;
   calendarId: string; // id du calendrier Google
   htmlLink?: string; // lien vers l'événement dans Google Agenda
+};
+
+// Un calendrier Google dans lequel on peut écrire une nouvelle boîte de temps.
+export type TimeboxCalendar = {
+  googleCalendarId: string;
+  label: string;
+  category: BlockCategory;
 };
 
 // ---------- BTS ATI (tâches / devoirs) ----------

@@ -6,7 +6,7 @@ import { getGoogleAccessToken } from "@/lib/google/token";
 import { listEvents } from "@/lib/google/calendar";
 import { toTimeBlock } from "@/lib/google/toTimeBlocks";
 import { parisDayRange } from "@/lib/date";
-import type { TimeBlock } from "@/lib/types";
+import type { BlockCategory, TimeBlock, TimeboxCalendar } from "@/lib/types";
 
 export type DayResult =
   | { status: "reconnect" }
@@ -15,6 +15,7 @@ export type DayResult =
       timed: TimeBlock[];
       allDay: TimeBlock[];
       failedCount: number;
+      calendars: TimeboxCalendar[];
     };
 
 export async function loadDay(
@@ -59,6 +60,11 @@ export async function loadDay(
     allDay: blocks.filter((b) => b.allDay),
     timed: blocks
       .filter((b) => !b.allDay)
-      .sort((a, b) => a.start.localeCompare(b.start)),
+      .sort((a, b) => a.startMin - b.startMin),
+    calendars: sources.map((s) => ({
+      googleCalendarId: s.googleCalendarId,
+      label: s.label,
+      category: s.category as BlockCategory,
+    })),
   };
 }

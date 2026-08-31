@@ -67,7 +67,17 @@ export async function listCalendarList(
   return data.items ?? [];
 }
 
-// ─── Écriture (préparé pour plus tard : "ajouter un bloc depuis le cockpit") ───
+// ─── Écriture : "ajouter une boîte de temps depuis le cockpit" ───
+
+export class CalendarWriteError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "CalendarWriteError";
+  }
+}
 
 export async function createEvent(opts: {
   accessToken: string;
@@ -90,6 +100,11 @@ export async function createEvent(opts: {
       body: JSON.stringify(opts.event),
     },
   );
-  if (!res.ok) throw new Error(`Création d'événement : ${res.status}`);
+  if (!res.ok) {
+    throw new CalendarWriteError(
+      res.status,
+      `Création d'événement : ${res.status}`,
+    );
+  }
   return (await res.json()) as GoogleEvent;
 }
