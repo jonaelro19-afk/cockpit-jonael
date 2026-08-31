@@ -12,7 +12,12 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
+  // .trim() + retrait des guillemets : robustesse face à une variable
+  // d'environnement Vercel collée avec un espace ou des quotes en trop.
+  const connectionString = process.env.DATABASE_URL?.trim().replace(
+    /^['"]|['"]$/g,
+    "",
+  );
   if (!connectionString) {
     throw new Error(
       "DATABASE_URL est absente. En local : la remplir dans .env. Sur Vercel : Settings → Environment Variables.",

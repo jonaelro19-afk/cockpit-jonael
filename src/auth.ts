@@ -18,6 +18,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
     Google({
+      // .trim() : une variable d'environnement collée avec un espace en trop
+      // (fréquent sur Vercel) donnerait sinon « invalid_client » chez Google.
+      clientId: process.env.AUTH_GOOGLE_ID?.trim(),
+      clientSecret: process.env.AUTH_GOOGLE_SECRET?.trim(),
       authorization: {
         params: {
           access_type: "offline",
