@@ -1,13 +1,10 @@
-// Point d'accès unique à la base de données.
+// Point d'accès unique à la base de données (Postgres / Neon, en local comme en prod).
 //
-// Prisma 7 se connecte via un "driver adapter". On choisit automatiquement :
-//   - Postgres / Neon  si DATABASE_URL commence par "postgres" (déploiement)
-//   - SQLite locale     sinon (développement, fichier prisma/dev.db)
-//
-// ⚠️ Le générateur Prisma cible UN seul provider (voir prisma/schema.prisma).
-// Pour le déploiement : basculer le provider en "postgresql" + `prisma generate`
-// (procédure complète dans DEPLOY.md). L'adaptateur ci-dessous suit tout seul.
+// Prisma 7 se connecte via un "driver adapter". On utilise l'adaptateur Neon
+// serverless, qui parle à la base par-dessus WebSocket (indispensable dans un
+// environnement serverless comme Vercel).
 
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -15,19 +12,15 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
-
-  if (url.startsWith("postgres")) {
-    // Déploiement : Neon serverless
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaNeon } = require("@prisma/adapter-neon");
-    return new PrismaClient({ adapter: new PrismaNeon({ connectionString: url }) });
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "DATABASE_URL est absente. En local : la remplir dans .env. Sur Vercel : Settings → Environment Variables.",
+    );
   }
-
-  // Local : SQLite
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
-  return new PrismaClient({ adapter: new PrismaBetterSqlite3({ url }) });
+  return new PrismaClient({
+    adapter: new PrismaNeon({ connectionString }),
+  });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

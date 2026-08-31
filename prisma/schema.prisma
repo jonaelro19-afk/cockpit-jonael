@@ -8,7 +8,9 @@ generator client {
 }
 
 datasource db {
-  // Postgres partout (base Neon). L'URL vient de prisma.ts / prisma7.config.ts.
+  // Postgres partout (base Neon). En Prisma 7 l'URL ne vit plus ici :
+  //  - migrations : prisma7.config.ts (bloc datasource)
+  //  - runtime    : adaptateur Neon dans src/lib/prisma.ts
   provider = "postgresql"
 }
 
