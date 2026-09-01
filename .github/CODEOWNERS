@@ -1,0 +1,11 @@
+# Toute modification du dépôt doit être relue et fusionnée par Jonael.
+# (GitHub demande automatiquement sa relecture sur chaque Pull Request.)
+*                       @jonaelro19-afk
+
+# Fichiers partagés = à surveiller de près : une modif ici impacte
+# d'autres modules que M&J.
+/prisma/schema.prisma   @jonaelro19-afk
+/src/lib/modules.ts     @jonaelro19-afk
+/src/app/page.tsx       @jonaelro19-afk
+/src/app/globals.css    @jonaelro19-afk
+/src/app/layout.tsx     @jonaelro19-afk
