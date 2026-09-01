@@ -38,6 +38,10 @@ export default async function GmailPage() {
     }),
   ]);
   const canArchive = account?.scope?.includes("gmail.modify") ?? false;
+  const canSend =
+    account?.scope?.includes("gmail.compose") ||
+    account?.scope?.includes("mail.google.com") ||
+    false;
 
   if (!result.ok) {
     if (result.reason === "reconnect") {
@@ -121,11 +125,12 @@ export default async function GmailPage() {
         subtitle={`${mails.length} non lus · ${important.length} importants · ${bruit.length} pubs`}
       />
 
-      {!canArchive && (
+      {(!canArchive || !canSend) && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-field border border-amber-400/30 bg-amber-400/10 px-4 py-3">
           <p className="text-xs text-amber-300">
-            Pour archiver depuis l&apos;app, une permission Gmail supplémentaire
-            est nécessaire.
+            {!canArchive
+              ? "Reconnecte ton compte Google pour activer l'archivage et l'envoi de réponses."
+              : "Reconnecte ton compte Google pour envoyer les réponses directement (créer un brouillon fonctionne déjà)."}
           </p>
           <SignInWithGoogle callbackUrl="/gmail" />
         </div>
@@ -146,7 +151,12 @@ export default async function GmailPage() {
         ) : (
           <ul className="divide-y divide-live/15 px-5">
             {important.map((m) => (
-              <MailRow key={m.id} mail={m} canArchive={canArchive} />
+              <MailRow
+                key={m.id}
+                mail={m}
+                canArchive={canArchive}
+                canSend={canSend}
+              />
             ))}
           </ul>
         )}
@@ -163,7 +173,13 @@ export default async function GmailPage() {
         >
           <ul className="divide-y divide-line">
             {avoir.map((m) => (
-              <MailRow key={m.id} mail={m} showReason canArchive={canArchive} />
+              <MailRow
+                key={m.id}
+                mail={m}
+                showReason
+                canArchive={canArchive}
+                canSend={canSend}
+              />
             ))}
           </ul>
         </Card>
@@ -184,7 +200,13 @@ export default async function GmailPage() {
           </p>
           <ul className="divide-y divide-line">
             {bruit.map((m) => (
-              <MailRow key={m.id} mail={m} showReason canArchive={canArchive} />
+              <MailRow
+                key={m.id}
+                mail={m}
+                showReason
+                canArchive={canArchive}
+                canSend={canSend}
+              />
             ))}
           </ul>
         </Card>

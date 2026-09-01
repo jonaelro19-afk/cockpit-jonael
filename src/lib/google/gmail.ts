@@ -14,6 +14,9 @@ export type MailSummary = {
   threadId: string;
   from: string; // nom affiché
   fromEmail: string;
+  to: string; // en-tête To brut
+  cc: string; // en-tête Cc brut
+  messageIdHeader: string; // en-tête Message-ID (pour répondre dans le fil)
   subject: string;
   snippet: string;
   date: string; // ISO
@@ -196,7 +199,7 @@ export async function listInbox(opts: {
   const detailed = await Promise.all(
     messages.map(async (m) => {
       const res = await fetch(
-        `${BASE}/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=List-Unsubscribe`,
+        `${BASE}/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Message-ID&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=List-Unsubscribe`,
         {
           headers: { Authorization: `Bearer ${opts.accessToken}` },
           cache: "no-store",
@@ -222,6 +225,9 @@ export async function listInbox(opts: {
         threadId: msg.threadId,
         from: name,
         fromEmail: email,
+        to: header(msg, "To"),
+        cc: header(msg, "Cc"),
+        messageIdHeader: header(msg, "Message-ID"),
         subject,
         snippet,
         date: msg.internalDate
@@ -258,4 +264,190 @@ export async function archiveMessages(opts: {
   });
   if (!res.ok) return { ok: false, count: 0, detail: (await res.text()).slice(0, 200) };
   return { ok: true, count: opts.ids.length };
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Répondre à un mail
+// ─────────────────────────────────────────────────────────────
+
+export class GmailWriteError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GmailWriteError";
+  }
+}
+
+type GmailPart = {
+  mimeType?: string;
+  body?: { data?: string; size?: number };
+  parts?: GmailPart[];
+};
+
+function decodeB64Url(data: string): string {
+  return Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString(
+    "utf8",
+  );
+}
+
+// Extrait le texte lisible d'un message (privilégie text/plain).
+function partToText(part: GmailPart | undefined): string {
+  if (!part) return "";
+  if (part.mimeType === "text/plain" && part.body?.data)
+    return decodeB64Url(part.body.data);
+  if (part.parts) {
+    const plain = part.parts.find((p) => p.mimeType === "text/plain");
+    if (plain?.body?.data) return decodeB64Url(plain.body.data);
+    for (const p of part.parts) {
+      const t = partToText(p);
+      if (t) return t;
+    }
+  }
+  if (part.mimeType === "text/html" && part.body?.data) {
+    return decodeB64Url(part.body.data)
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+\n/g, "\n")
+      .replace(/[ \t]{2,}/g, " ");
+  }
+  return "";
+}
+
+export type ThreadForReply = {
+  subject: string;
+  replyTo: string; // adresse à qui répondre
+  lastMessageIdHeader: string;
+  referencesHeader: string;
+  messages: { from: string; date: string; text: string }[];
+};
+
+// Récupère le fil complet, pour donner le contexte à l'IA + les en-têtes
+// nécessaires à une vraie réponse dans le fil.
+export async function getThreadForReply(opts: {
+  accessToken: string;
+  threadId: string;
+}): Promise<ThreadForReply> {
+  const res = await fetch(
+    `${BASE}/threads/${opts.threadId}?format=full`,
+    { headers: { Authorization: `Bearer ${opts.accessToken}` }, cache: "no-store" },
+  );
+  if (!res.ok)
+    throw new GmailWriteError(res.status, `Lecture du fil : ${res.status}`);
+  const data = (await res.json()) as {
+    messages?: (GmailMessage & { payload?: GmailPart })[];
+  };
+  const msgs = data.messages ?? [];
+
+  const messages = msgs.map((m) => ({
+    from: header(m as GmailMessage, "From"),
+    date: header(m as GmailMessage, "Date"),
+    text: partToText(m.payload as GmailPart).trim().slice(0, 4000),
+  }));
+
+  const last = msgs[msgs.length - 1] as GmailMessage | undefined;
+  const first = msgs[0] as GmailMessage | undefined;
+  const replyToRaw = last
+    ? header(last, "Reply-To") || header(last, "From")
+    : "";
+  const ids = msgs
+    .map((m) => header(m as GmailMessage, "Message-ID"))
+    .filter(Boolean);
+
+  return {
+    subject: first ? header(first, "Subject") : "",
+    replyTo: parseFrom(replyToRaw).email,
+    lastMessageIdHeader: last ? header(last, "Message-ID") : "",
+    referencesHeader: ids.join(" "),
+    messages,
+  };
+}
+
+function mimeWord(s: string): string {
+  return /[^\x00-\x7F]/.test(s)
+    ? `=?UTF-8?B?${Buffer.from(s, "utf8").toString("base64")}?=`
+    : s;
+}
+
+function buildRawReply(opts: {
+  fromName: string;
+  fromEmail: string;
+  to: string;
+  subject: string;
+  inReplyTo: string;
+  references: string;
+  body: string;
+}): string {
+  const subject = /^re\s*:/i.test(opts.subject)
+    ? opts.subject
+    : `Re: ${opts.subject}`;
+  const bodyB64 = (Buffer.from(opts.body, "utf8").toString("base64").match(
+    /.{1,76}/g,
+  ) ?? []).join("\r\n");
+
+  const headers = [
+    `From: ${mimeWord(opts.fromName)} <${opts.fromEmail}>`,
+    `To: ${opts.to}`,
+    `Subject: ${mimeWord(subject)}`,
+    opts.inReplyTo ? `In-Reply-To: ${opts.inReplyTo}` : "",
+    opts.references ? `References: ${opts.references}` : "",
+    "MIME-Version: 1.0",
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+  ]
+    .filter(Boolean)
+    .join("\r\n");
+
+  const raw = `${headers}\r\n\r\n${bodyB64}`;
+  return Buffer.from(raw, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+export type SendMode = "draft" | "send";
+
+// Crée un brouillon de réponse (mode "draft") ou envoie la réponse
+// directement (mode "send") dans le bon fil de discussion.
+export async function replyToThread(opts: {
+  accessToken: string;
+  mode: SendMode;
+  threadId: string;
+  fromName: string;
+  fromEmail: string;
+  to: string;
+  subject: string;
+  inReplyTo: string;
+  references: string;
+  body: string;
+}): Promise<{ id: string }> {
+  const raw = buildRawReply(opts);
+  const endpoint =
+    opts.mode === "send" ? `${BASE}/messages/send` : `${BASE}/drafts`;
+  const payload =
+    opts.mode === "send"
+      ? { raw, threadId: opts.threadId }
+      : { message: { raw, threadId: opts.threadId } };
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${opts.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new GmailWriteError(
+      res.status,
+      `${opts.mode === "send" ? "Envoi" : "Brouillon"} : ${res.status} ${(
+        await res.text()
+      ).slice(0, 160)}`,
+    );
+  }
+  return (await res.json()) as { id: string };
 }

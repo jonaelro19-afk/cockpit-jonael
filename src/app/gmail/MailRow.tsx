@@ -1,8 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
-import { Archive, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { Archive, ExternalLink, Reply } from "lucide-react";
 import { archiveMail } from "./actions";
+import ReplyComposer from "./ReplyComposer";
 import type { MailSummary } from "@/lib/google/gmail";
 
 function fmtWhen(iso: string): string {
@@ -17,12 +19,16 @@ export default function MailRow({
   mail,
   showReason = false,
   canArchive = true,
+  canSend = false,
 }: {
   mail: MailSummary;
   showReason?: boolean;
   canArchive?: boolean;
+  canSend?: boolean;
 }) {
   const [pending, start] = useTransition();
+  const [replyOpen, setReplyOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <li
@@ -44,6 +50,13 @@ export default function MailRow({
         {showReason && (
           <p className="mt-0.5 text-[11px] text-faint">{mail.reason}</p>
         )}
+        <button
+          type="button"
+          onClick={() => setReplyOpen(true)}
+          className="mt-1.5 inline-flex items-center gap-1 rounded-pill border border-line px-2.5 py-1 text-xs font-medium text-muted hover:border-white/20 hover:text-text"
+        >
+          <Reply size={12} /> Répondre
+        </button>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <a
@@ -68,6 +81,15 @@ export default function MailRow({
           </button>
         )}
       </div>
+
+      {replyOpen && (
+        <ReplyComposer
+          mail={mail}
+          canSend={canSend}
+          onClose={() => setReplyOpen(false)}
+          onDone={() => router.refresh()}
+        />
+      )}
     </li>
   );
 }

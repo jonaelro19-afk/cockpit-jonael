@@ -32,6 +32,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             "profile",
             "https://www.googleapis.com/auth/calendar",
             "https://www.googleapis.com/auth/gmail.modify",
+            // Rédaction : brouillons + envoi de réponses depuis le cockpit.
+            "https://www.googleapis.com/auth/gmail.compose",
           ].join(" "),
         },
       },
