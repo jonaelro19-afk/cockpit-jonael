@@ -66,7 +66,7 @@ function buildUserPrompt(opts: {
 }
 
 async function askGemini(key: string, user: string): Promise<string> {
-  const model = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
@@ -75,16 +75,17 @@ async function askGemini(key: string, user: string): Promise<string> {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: SYSTEM }] },
         contents: [{ role: "user", parts: [{ text: user }] }],
-        generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+        generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
       }),
     },
   );
   if (!res.ok)
     throw new AiError("api", `Gemini a répondu ${res.status} : ${(await res.text()).slice(0, 200)}`);
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[];
   };
   return (data.candidates?.[0]?.content?.parts ?? [])
+    .filter((p) => !p.thought)
     .map((p) => p.text ?? "")
     .join("")
     .trim();
