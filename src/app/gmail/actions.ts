@@ -75,7 +75,7 @@ export async function suggestReplyAction(
         kind: err.kind,
         error:
           err.kind === "no-key"
-            ? "L'IA n'est pas encore configurée (clé ANTHROPIC_API_KEY à ajouter sur Vercel)."
+            ? "L'IA n'est pas encore configurée : ajoute GEMINI_API_KEY (gratuit) sur Vercel."
             : `L'IA n'a pas pu répondre : ${err.message}`,
       };
     console.error("suggestReplyAction", err);
