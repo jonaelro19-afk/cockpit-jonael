@@ -1,14 +1,17 @@
 import Link from "next/link";
-import { Search, Bookmark, Link2, SearchX } from "lucide-react";
+import { Search, Bookmark, Link2, SearchX, FileText } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import EmptyState from "@/components/EmptyState";
+import AddMenu from "./AddMenu";
 import {
   getSubjectsWithCounts,
   getLinks,
   searchNotions,
   getBookmarkedNotions,
+  getRecentFiches,
 } from "@/lib/bts";
+import { ficheKind } from "@/lib/bts-shared";
 
 export default async function BtsHomePage({
   searchParams,
@@ -18,10 +21,11 @@ export default async function BtsHomePage({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
-  const [subjects, links, bookmarked, results] = await Promise.all([
+  const [subjects, links, bookmarked, fiches, results] = await Promise.all([
     getSubjectsWithCounts(),
     getLinks(),
     getBookmarkedNotions(),
+    getRecentFiches(6),
     query ? searchNotions(query) : Promise.resolve([]),
   ]);
 
@@ -33,10 +37,13 @@ export default async function BtsHomePage({
         title="Carnet de notions"
         subtitle={`${subjects.length} matières · ${totalNotions} notions`}
         action={
-          <Link href="/bts/a-revoir" className="btn-secondary">
-            <Bookmark size={15} strokeWidth={2} />
-            {bookmarked.length}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/bts/a-revoir" className="btn-secondary">
+              <Bookmark size={15} strokeWidth={2} />
+              {bookmarked.length}
+            </Link>
+            <AddMenu />
+          </div>
         }
       />
 
@@ -78,6 +85,59 @@ export default async function BtsHomePage({
               </Link>
             ))}
           </div>
+
+          <section className="mt-8">
+            <div className="mb-3 flex items-center justify-between border-b border-line pb-1.5">
+              <h2 className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-muted">
+                <FileText size={13} /> Fiches de révision
+              </h2>
+              <Link
+                href="/bts/fiches"
+                className="text-xs font-medium text-muted hover:text-text"
+              >
+                Toutes les fiches →
+              </Link>
+            </div>
+            {fiches.length === 0 ? (
+              <p className="py-3 text-sm text-muted">
+                Aucune fiche.{" "}
+                <Link
+                  href="/bts/fiches/nouvelle"
+                  className="text-text underline"
+                >
+                  Créer une fiche à partir d&apos;un cours
+                </Link>
+                .
+              </p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {fiches.map((f) => (
+                  <Link
+                    key={f.id}
+                    href={`/bts/fiches/${f.id}`}
+                    className="rounded-field border border-line bg-surface px-3.5 py-2.5 hover:bg-surface-2"
+                    style={{
+                      borderLeft: `3px solid ${f.subject?.color ?? "#a78bfa"}`,
+                    }}
+                  >
+                    <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
+                      {f.bookmarked && (
+                        <Bookmark
+                          size={12}
+                          className="shrink-0 fill-amber-400 text-amber-400"
+                        />
+                      )}
+                      {f.title}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
+                      {f.subject ? `${f.subject.name} · ` : ""}
+                      {ficheKind(f.kind).label}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
 
           <section className="mt-8">
             <h2 className="mb-3 flex items-center gap-2 border-b border-line pb-1.5 font-mono text-xs uppercase tracking-wider text-muted">

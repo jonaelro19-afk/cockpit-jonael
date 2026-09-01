@@ -67,6 +67,37 @@ export function getLinks() {
   });
 }
 
+// ── Fiches de révision ────────────────────────────────────────────
+
+export function getFiches() {
+  return prisma.fiche.findMany({
+    orderBy: [{ bookmarked: "desc" }, { updatedAt: "desc" }],
+    include: { subject: true },
+  });
+}
+
+export function getRecentFiches(take = 4) {
+  return prisma.fiche.findMany({
+    orderBy: { updatedAt: "desc" },
+    take,
+    include: { subject: true },
+  });
+}
+
+export function getFiche(id: string) {
+  return prisma.fiche.findUnique({
+    where: { id },
+    include: { subject: true },
+  });
+}
+
+export function getSubjectsSimple() {
+  return prisma.subject.findMany({
+    orderBy: { order: "asc" },
+    select: { id: true, name: true, color: true },
+  });
+}
+
 // Recherche plein-texte simple : terme + résumé + contenu (balises retirées).
 export async function searchNotions(query: string) {
   const q = query.trim().toLowerCase();

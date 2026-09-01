@@ -1,0 +1,170 @@
+/*
+  Style "fiche de révision papier" : fond petits carreaux, marge rouge,
+  écritures en couleur. Volontairement clair même en thème sombre — c'est
+  une feuille qu'on relit avant un DS. Tout est limité à .fiche-papier.
+*/
+
+.fiche-papier {
+  --carreau: 25px;
+  --ligne: rgba(43, 108, 176, 0.2);
+  --marge: #e8746a;
+  position: relative;
+  color: #1b1b2b;
+  background-color: #fffdf5;
+  background-image:
+    linear-gradient(var(--ligne) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ligne) 1px, transparent 1px);
+  background-size: var(--carreau) var(--carreau);
+  background-position: -1px -1px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 1.55rem 1.4rem 1.8rem 2.9rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  font-size: 1.05rem;
+  line-height: var(--carreau);
+  font-family: var(--font-fiche, ui-sans-serif, system-ui), sans-serif;
+}
+
+/* Marge rouge verticale, comme sur une vraie feuille */
+.fiche-papier::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2.1rem;
+  width: 2px;
+  background: var(--marge);
+  opacity: 0.75;
+}
+
+.fiche-papier > :first-child {
+  margin-top: 0;
+}
+.fiche-papier p {
+  margin: 0.44rem 0;
+}
+.fiche-papier ul,
+.fiche-papier ol {
+  margin: 0.44rem 0;
+  padding-left: 1.5rem;
+}
+.fiche-papier li {
+  margin: 0.15rem 0;
+}
+.fiche-papier ul li::marker {
+  color: #2b6cb0;
+  content: "▸ ";
+}
+
+/* Grand titre — stylo bleu */
+.fiche-papier .f-titre {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #1746a2;
+  margin: 1.3rem 0 0.5rem;
+  padding-bottom: 0.1rem;
+  border-bottom: 2px solid #1746a2;
+}
+.fiche-papier > .f-titre:first-child {
+  margin-top: 0;
+}
+
+/* Sous-titre — stylo rouge */
+.fiche-papier .f-soustitre {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #c0392b;
+  margin: 0.9rem 0 0.3rem;
+}
+
+/* Mot-clé — stylo vert */
+.fiche-papier .f-cle {
+  color: #12805a;
+  font-weight: 700;
+}
+
+/* Définition */
+.fiche-papier .f-def {
+  font-style: italic;
+}
+
+/* Surligneur jaune */
+.fiche-papier mark {
+  background: #fff08a;
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+  box-decoration-break: clone;
+}
+
+/* Formule encadrée */
+.fiche-papier .f-formule {
+  display: block;
+  margin: 0.6rem auto;
+  padding: 0.5rem 0.9rem;
+  max-width: max-content;
+  background: #ffffff;
+  border: 1.5px dashed #1746a2;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Bloc "À retenir" */
+.fiche-papier .f-retenir {
+  margin: 0.7rem 0;
+  padding: 0.5rem 0.8rem;
+  background: #fdecea;
+  border: 2px solid #d64541;
+  border-radius: 8px;
+}
+.fiche-papier .f-retenir b {
+  display: block;
+  color: #b3271e;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.15rem;
+}
+
+/* Exemple */
+.fiche-papier .f-exemple {
+  margin: 0.5rem 0;
+  padding-left: 0.7rem;
+  border-left: 3px solid #94a3b8;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+/* Petits tableaux */
+.fiche-papier table {
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+  font-size: 0.88rem;
+}
+.fiche-papier th,
+.fiche-papier td {
+  border: 1px solid #9db8d2;
+  padding: 0.28rem 0.55rem;
+  text-align: left;
+}
+.fiche-papier th {
+  background: #eaf1f9;
+  color: #1746a2;
+}
+
+.fiche-papier b,
+.fiche-papier strong {
+  color: #1b1b2b;
+}
+
+@media print {
+  .fiche-papier {
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding-left: 2.9rem;
+  }
+}
