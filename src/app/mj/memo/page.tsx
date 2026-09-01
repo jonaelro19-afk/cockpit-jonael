@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import MjTabs from "../MjTabs";
 import AddNote from "./AddNote";
+import Assistant from "./Assistant";
 import MemoNote from "./MemoNote";
 import { auth } from "@/auth";
 import { getNotesByTheme } from "@/lib/mj-notes";
@@ -27,6 +28,8 @@ export default async function MemoPage() {
         action={<AddNote />}
       />
       <MjTabs />
+
+      <Assistant />
 
       <p className="mb-5 text-xs text-muted">
         Tout ce qui doit guider chaque projet : la niche, comment approcher un

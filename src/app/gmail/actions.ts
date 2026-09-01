@@ -14,6 +14,7 @@ import {
 } from "@/lib/google/gmail";
 import { suggestReply, AiError } from "@/lib/ai/reply";
 import { loadInbox } from "@/lib/gmail-inbox";
+import { getMjContext } from "@/lib/mj-context";
 
 async function sessionOrThrow() {
   const session = await auth();
@@ -61,11 +62,15 @@ export async function suggestReplyAction(
 ): Promise<SuggestState> {
   try {
     const accessToken = await tokenOrThrow();
-    const thread = await getThreadForReply({ accessToken, threadId });
+    const [thread, businessContext] = await Promise.all([
+      getThreadForReply({ accessToken, threadId }),
+      getMjContext({ pinnedOnly: true }).catch(() => ""),
+    ]);
     const text = await suggestReply({
       subject: thread.subject,
       messages: thread.messages,
       instruction: instruction?.trim() || undefined,
+      businessContext: businessContext || undefined,
     });
     return { ok: true, text };
   } catch (err) {

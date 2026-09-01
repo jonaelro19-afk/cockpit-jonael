@@ -45,6 +45,7 @@ function buildUserPrompt(opts: {
   subject: string;
   messages: ThreadMessage[];
   instruction?: string;
+  businessContext?: string;
 }): string {
   const fil = opts.messages
     .map(
@@ -54,6 +55,9 @@ function buildUserPrompt(opts: {
     .join("\n\n");
 
   return [
+    opts.businessContext
+      ? `Si le mail concerne M&J Production, appuie-toi sur ces repères :\n${opts.businessContext}\n`
+      : "",
     `Objet du fil : ${opts.subject || "(sans objet)"}`,
     "",
     "Fil de discussion (du plus ancien au plus récent) :",
@@ -62,7 +66,9 @@ function buildUserPrompt(opts: {
     opts.instruction
       ? `Consigne de Jonael pour cette réponse : ${opts.instruction}`
       : "Rédige la réponse de Jonael au dernier message.",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function askGemini(key: string, user: string): Promise<string> {
@@ -121,6 +127,7 @@ export async function suggestReply(opts: {
   subject: string;
   messages: ThreadMessage[];
   instruction?: string;
+  businessContext?: string;
 }): Promise<string> {
   const gemini = process.env.GEMINI_API_KEY?.trim();
   const anthropic = process.env.ANTHROPIC_API_KEY?.trim();
