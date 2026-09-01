@@ -52,9 +52,12 @@ export default function AnalysisWorkspace({
   const [running, startRun] = useTransition();
   const [saving, startSave] = useTransition();
 
+  // Liste figée sur l'état PERSISTÉ : sinon une question disparaît dès qu'on
+  // tape un caractère dedans (son <input> se démonte). Elle se met à jour
+  // après « Enregistrer le brief » ou une analyse.
   const pending = useMemo(
-    () => missingQuestions(brief, answers),
-    [brief, answers],
+    () => missingQuestions(analysis.brief, analysis.answers),
+    [analysis.brief, analysis.answers],
   );
   const hasOutputs = Object.keys(analysis.outputs).length > 0;
   const dirty =
