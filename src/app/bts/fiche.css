@@ -1,163 +1,249 @@
 /*
-  Style "fiche de révision papier" : fond petits carreaux, marge rouge,
-  écritures en couleur. Volontairement clair même en thème sombre — c'est
-  une feuille qu'on relit avant un DS. Tout est limité à .fiche-papier.
+  Fiche de révision "papier" : fond beige quadrillé, marge rouge, écritures
+  en couleur, dessins à main levée. Volontairement clair même en thème
+  sombre — c'est une feuille qu'on relit avant un DS. Tout est sous .fiche-papier.
 */
 
 .fiche-papier {
-  --carreau: 25px;
-  --ligne: rgba(43, 108, 176, 0.2);
+  --carreau: 26px;
+  --ligne: rgba(120, 145, 120, 0.28);
   --marge: #e8746a;
   position: relative;
-  color: #1b1b2b;
-  background-color: #fffdf5;
+  color: #1f2033;
+  background-color: #fdf3d7; /* beige / jaune clair */
   background-image:
     linear-gradient(var(--ligne) 1px, transparent 1px),
     linear-gradient(90deg, var(--ligne) 1px, transparent 1px);
   background-size: var(--carreau) var(--carreau);
   background-position: -1px -1px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
-  padding: 1.55rem 1.4rem 1.8rem 2.9rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
+  padding: 1.7rem 1.5rem 1.9rem 3rem;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.4);
   font-size: 1.05rem;
   line-height: var(--carreau);
-  font-family: var(--font-fiche, ui-sans-serif, system-ui), sans-serif;
+  font-family: var(--font-fiche-body, ui-sans-serif, system-ui), sans-serif;
 }
 
-/* Marge rouge verticale, comme sur une vraie feuille */
+/* marge rouge verticale */
 .fiche-papier::before {
   content: "";
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 2.1rem;
+  inset: 0 auto 0 2.15rem;
   width: 2px;
   background: var(--marge);
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .fiche-papier > :first-child {
   margin-top: 0;
 }
 .fiche-papier p {
-  margin: 0.44rem 0;
+  margin: 0.35rem 0;
 }
 .fiche-papier ul,
 .fiche-papier ol {
-  margin: 0.44rem 0;
+  margin: 0.35rem 0;
   padding-left: 1.5rem;
 }
 .fiche-papier li {
-  margin: 0.15rem 0;
+  margin: 0.1rem 0;
 }
 .fiche-papier ul li::marker {
-  color: #2b6cb0;
-  content: "▸ ";
+  color: #2f7d32;
+  content: "→ ";
+}
+.fiche-papier b,
+.fiche-papier strong {
+  color: #1f2033;
+  font-weight: 700;
 }
 
-/* Grand titre — stylo bleu */
+/* ── Titres (écriture feutre) ──────────────────────────────── */
 .fiche-papier .f-titre {
-  font-size: 1.5rem;
-  line-height: 1.2;
+  font-family: var(--font-fiche-titre, cursive);
+  font-size: 2.15rem;
+  line-height: 1.1;
   font-weight: 700;
-  color: #1746a2;
-  margin: 1.3rem 0 0.5rem;
-  padding-bottom: 0.1rem;
-  border-bottom: 2px solid #1746a2;
+  color: #12307e;
+  margin: 0 0 0.2rem;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-decoration-color: #12307e;
 }
-.fiche-papier > .f-titre:first-child {
-  margin-top: 0;
+.fiche-papier .f-sous-titre {
+  font-family: var(--font-fiche-titre, cursive);
+  font-size: 1.25rem;
+  color: #b23a2e;
+  margin: 0 0 0.9rem;
 }
-
-/* Sous-titre — stylo rouge */
 .fiche-papier .f-soustitre {
-  font-size: 1.12rem;
+  font-family: var(--font-fiche-titre, cursive);
+  font-size: 1.45rem;
   font-weight: 700;
-  color: #c0392b;
-  margin: 0.9rem 0 0.3rem;
+  color: #b23a2e;
+  margin: 0.7rem 0 0.35rem;
+  text-decoration: underline;
+  text-decoration-color: #e6a800;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
-/* Mot-clé — stylo vert */
+/* ── Colonnes ─────────────────────────────────────────────── */
+.fiche-papier .f-colonnes--2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+}
+.fiche-papier .f-colonnes--2 .f-colonne + .f-colonne {
+  padding-left: 1.4rem;
+  border-left: 2px dashed rgba(120, 90, 60, 0.4);
+}
+@media (max-width: 640px) {
+  .fiche-papier .f-colonnes--2 {
+    grid-template-columns: 1fr;
+  }
+  .fiche-papier .f-colonnes--2 .f-colonne + .f-colonne {
+    padding-left: 0;
+    border-left: none;
+    border-top: 2px dashed rgba(120, 90, 60, 0.4);
+    padding-top: 0.6rem;
+    margin-top: 0.6rem;
+  }
+}
+
+/* ── Texte mis en valeur ──────────────────────────────────── */
 .fiche-papier .f-cle {
-  color: #12805a;
+  color: #12307e;
   font-weight: 700;
 }
-
-/* Définition */
+.fiche-papier mark {
+  background: #ffe95c; /* surligneur jaune */
+  color: inherit;
+  padding: 0 3px;
+  border-radius: 3px;
+  box-decoration-break: clone;
+}
+.fiche-papier mark.f-vert {
+  background: #9be08a; /* surligneur vert : résultats / conditions clés */
+}
+.fiche-papier .f-definition {
+  margin: 0.3rem 0;
+}
 .fiche-papier .f-def {
   font-style: italic;
 }
 
-/* Surligneur jaune */
-.fiche-papier mark {
-  background: #fff08a;
-  color: inherit;
-  padding: 0 2px;
-  border-radius: 2px;
-  box-decoration-break: clone;
-}
-
-/* Formule encadrée */
+/* ── Formule : encadré rose / magenta ─────────────────────── */
 .fiche-papier .f-formule {
   display: block;
-  margin: 0.6rem auto;
-  padding: 0.5rem 0.9rem;
+  margin: 0.7rem auto;
+  padding: 0.55rem 1rem;
   max-width: max-content;
-  background: #ffffff;
-  border: 1.5px dashed #1746a2;
-  border-radius: 6px;
+  background: #ffe3f1;
+  border: 2px solid #d6247e;
+  border-radius: 8px;
+  color: #a01360;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 0.95rem;
+  font-size: 1rem;
   text-align: center;
 }
 
-/* Bloc "À retenir" */
+/* ── Encadrés ─────────────────────────────────────────────── */
+.fiche-papier .f-box {
+  display: block;
+  margin: 0.7rem 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  border: 2px solid;
+}
+.fiche-papier .f-box-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.1rem;
+}
+.fiche-papier .f-box--attention {
+  background: #ffe2e0;
+  border-color: #d64541;
+}
+.fiche-papier .f-box--attention .f-box-label {
+  color: #b3271e;
+}
+.fiche-papier .f-box--retenir {
+  background: #e2f0ff;
+  border-color: #2f6fd6;
+}
+.fiche-papier .f-box--retenir .f-box-label {
+  color: #1d4ea0;
+}
+.fiche-papier .f-box--astuce {
+  background: #eafbe6;
+  border-color: #3f9e4c;
+}
+.fiche-papier .f-box--astuce .f-box-label {
+  color: #2f7d32;
+}
+
+/* alias hérités (anciennes fiches HTML) */
 .fiche-papier .f-retenir {
   margin: 0.7rem 0;
   padding: 0.5rem 0.8rem;
-  background: #fdecea;
+  background: #ffe2e0;
   border: 2px solid #d64541;
   border-radius: 8px;
 }
 .fiche-papier .f-retenir b {
   display: block;
   color: #b3271e;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  margin-bottom: 0.15rem;
+  letter-spacing: 0.06em;
 }
-
-/* Exemple */
 .fiche-papier .f-exemple {
   margin: 0.5rem 0;
   padding-left: 0.7rem;
   border-left: 3px solid #94a3b8;
   color: #4b5563;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
-/* Petits tableaux */
+/* ── Schéma dessiné main ──────────────────────────────────── */
+.fiche-papier .f-schema {
+  margin: 0.7rem 0;
+  text-align: center;
+}
+.fiche-papier .f-schema figcaption {
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  color: #6b5b45;
+}
+
+/* ── Tableaux ─────────────────────────────────────────────── */
 .fiche-papier table {
   border-collapse: collapse;
   margin: 0.6rem 0;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 .fiche-papier th,
 .fiche-papier td {
-  border: 1px solid #9db8d2;
+  border: 1px solid #b9a98a;
   padding: 0.28rem 0.55rem;
   text-align: left;
 }
 .fiche-papier th {
-  background: #eaf1f9;
-  color: #1746a2;
+  background: #f3e6c4;
+  color: #12307e;
 }
 
-.fiche-papier b,
-.fiche-papier strong {
-  color: #1b1b2b;
+.fiche-papier .f-note {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #6b5b45;
+  font-style: italic;
 }
 
 @media print {
@@ -165,6 +251,5 @@
     box-shadow: none;
     border: none;
     border-radius: 0;
-    padding-left: 2.9rem;
   }
 }
