@@ -202,6 +202,7 @@ model Client {
   updatedAt DateTime  @updatedAt
   projects  Project[]
   quotes    Quote[]
+  analyses  MjAnalysis[]
 }
 
 model Project {
@@ -267,6 +268,32 @@ model TarifItem {
   unitPrice Float  @default(0)
   category  String @default("")
   position  Int    @default(0)
+}
+
+// ─────────────────────────────────────────────
+//  Agents IA : analyse multi-agents d'un brief client
+//  Un brief → 5 agents (commercial, planning, créatif, montage, marketing).
+//  Les sorties structurées + conflits sont stockés en JSON (souples, versionnables).
+// ─────────────────────────────────────────────
+
+model MjAnalysis {
+  id        String   @id @default(cuid())
+  title     String   @default("Analyse")
+  clientId  String?
+  projectId String? // lien souple vers un Project (pas de FK)
+  quoteId   String? // devis généré depuis l'analyse
+  brief     String   @default("")
+  answers   Json     @default("{}") // réponses au questionnaire commercial
+  engine    String   @default("rules") // "rules" | "llm"
+  // "brief" | "devis" | "tournage" | "montage" | "livraison" | "archive"
+  status    String   @default("brief")
+  outputs   Json     @default("{}") // { commercial: AgentOutput, planning: ... }
+  conflicts Json     @default("[]") // Conflict[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
 }
 
 // ─────────────────────────────────────────────

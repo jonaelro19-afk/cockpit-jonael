@@ -144,3 +144,19 @@ export async function getEquipment() {
 export function getEquipmentItem(id: string) {
   return prisma.equipment.findUnique({ where: { id } });
 }
+
+// ---------- Agents IA ----------
+
+export function getAnalyses() {
+  return prisma.mjAnalysis.findMany({
+    orderBy: { updatedAt: "desc" },
+    include: { client: true },
+  });
+}
+
+export function getAnalysis(id: string) {
+  return prisma.mjAnalysis.findUnique({
+    where: { id },
+    include: { client: true },
+  });
+}

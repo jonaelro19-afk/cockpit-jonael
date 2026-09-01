@@ -62,6 +62,7 @@ export const modules: ModuleDef[] = [
       { label: "Vue d'ensemble", href: "/mj" },
       { label: "Clients", href: "/mj/clients" },
       { label: "Devis", href: "/mj/devis" },
+      { label: "Agents IA", href: "/mj/agents" },
       { label: "Suivi matériel", href: "/mj/suivi" },
     ],
   },
