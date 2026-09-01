@@ -293,6 +293,20 @@ model TarifItem {
 //  Les sorties structurées + conflits sont stockés en JSON (souples, versionnables).
 // ─────────────────────────────────────────────
 
+// Mémo M&J : base de connaissances de l'agence, par thème (markdown léger).
+model MjNote {
+  id        String   @id @default(cuid())
+  theme     String // "Niche" | "Approche client" | "Devis" | "Production" | "Prospection" | "Ressources"
+  title     String
+  body      String   @default("")
+  pinned    Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([theme])
+}
+
 model MjAnalysis {
   id        String   @id @default(cuid())
   title     String   @default("Analyse")

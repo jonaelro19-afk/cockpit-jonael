@@ -153,3 +153,23 @@ export function relativeDays(d: Date | string | null | undefined): string {
   if (diff === -1) return "hier";
   return diff > 0 ? `dans ${diff} j` : `il y a ${-diff} j`;
 }
+
+// ── Mémo M&J (base de connaissances) ──────────────────────────────
+export const MJ_NOTE_THEMES = [
+  "Niche",
+  "Approche client",
+  "Devis",
+  "Production",
+  "Prospection",
+  "Ressources",
+] as const;
+export type MjNoteTheme = (typeof MJ_NOTE_THEMES)[number];
+
+export const mjThemeColor: Record<string, string> = {
+  Niche: "#f472b6",
+  "Approche client": "#38bdf8",
+  Devis: "#34d399",
+  Production: "#a78bfa",
+  Prospection: "#fbbf24",
+  Ressources: "#94a3b8",
+};

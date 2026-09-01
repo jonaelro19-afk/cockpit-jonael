@@ -1,0 +1,63 @@
+/* Rendu des notes du Mémo M&J (markdown léger). */
+.memo-body {
+  color: var(--text);
+  line-height: 1.6;
+}
+.memo-body > :first-child {
+  margin-top: 0;
+}
+.memo-body h2,
+.memo-body h3,
+.memo-body h4 {
+  font-weight: 700;
+  color: var(--text);
+  margin: 1rem 0 0.35rem;
+}
+.memo-body h2 {
+  font-size: 1rem;
+}
+.memo-body h3 {
+  font-size: 0.9rem;
+}
+.memo-body h4 {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.memo-body p {
+  margin: 0.55rem 0;
+  color: var(--muted);
+}
+.memo-body strong {
+  color: var(--text);
+  font-weight: 650;
+}
+.memo-body ul,
+.memo-body ol {
+  margin: 0.5rem 0;
+  padding-left: 1.4rem;
+}
+.memo-body li {
+  margin: 0.2rem 0;
+  color: var(--muted);
+}
+.memo-body ul li::marker {
+  color: var(--faint);
+}
+.memo-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  word-break: break-word;
+}
+.memo-body code {
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.85em;
+}
+.memo-body blockquote {
+  margin: 0.6rem 0;
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--line);
+  color: var(--muted);
+  font-style: italic;
+}
