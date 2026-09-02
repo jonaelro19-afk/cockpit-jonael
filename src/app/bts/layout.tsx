@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Patrick_Hand, Caveat } from "next/font/google";
+import { requireOwner } from "@/lib/require-owner";
 import "./carnet.css";
 import "./fiche.css";
 import "katex/dist/katex.min.css";
@@ -20,7 +21,8 @@ const caveat = Caveat({
   display: "swap",
 });
 
-export default function BtsLayout({ children }: { children: ReactNode }) {
+export default async function BtsLayout({ children }: { children: ReactNode }) {
+  await requireOwner();
   return (
     <div className={`${patrickHand.variable} ${caveat.variable}`}>{children}</div>
   );

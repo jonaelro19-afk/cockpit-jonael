@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Plus, ArrowUpRight } from "lucide-react";
 import Card from "@/components/Card";
 import { SignInWithGoogle } from "@/components/SignInWithGoogle";
 import AddTask from "./taches/AddTask";
 import TaskItem from "./taches/TaskItem";
 import { auth } from "@/auth";
+import { isOwnerEmail } from "@/lib/access";
 import { loadDay } from "@/lib/timebox";
 import { modules } from "@/lib/modules";
 import { formatLongDate, todayInParis } from "@/lib/date";
@@ -28,6 +30,8 @@ const catColor: Record<string, string> = {
 
 export default async function DashboardPage() {
   const session = await auth();
+  // Un collaborateur M&J n'a pas de tableau de bord perso : on l'envoie sur M&J.
+  if (session?.user && !isOwnerEmail(session.user.email)) redirect("/mj");
   const today = todayInParis();
 
   const day = session?.user ? await loadDay(session.user.id, today) : null;

@@ -11,6 +11,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { isEmailAllowed, roleFor } from "@/lib/access";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -41,9 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Sécurité : une seule adresse Google peut se connecter à l'app.
-      const allowed = process.env.ALLOWED_EMAIL?.toLowerCase().trim();
-      if (allowed && profile?.email?.toLowerCase() !== allowed) return false;
+      // Sécurité : seules les adresses de ALLOWED_EMAIL peuvent se connecter.
+      if (!isEmailAllowed(profile?.email ?? user?.email)) return false;
 
       // Par défaut, l'adapter Prisma n'enregistre les jetons Google qu'à la
       // toute première connexion. Si l'utilisateur se reconnecte (ex. pour
@@ -63,9 +63,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    // Expose l'id utilisateur côté application.
+    // Expose l'id utilisateur + le rôle côté application.
     async session({ session, user }) {
-      if (session.user) session.user.id = user.id;
+      if (session.user) {
+        session.user.id = user.id;
+        session.user.role = roleFor(session.user.email);
+      }
       return session;
     },
   },

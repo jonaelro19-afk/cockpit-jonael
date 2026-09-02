@@ -6,18 +6,37 @@ import { usePathname } from "next/navigation";
 import { moduleByKey, settingsModule } from "@/lib/modules";
 
 // Barre du bas : 5 accès + Paramètres. BTS / Gmail via les cartes du Dashboard.
-const tabs = ["dashboard", "timebox", "taches", "sport", "mj"].map(
+const ownerTabs = ["dashboard", "timebox", "taches", "sport", "mj"].map(
   (k) => moduleByKey[k],
 );
 
-export default function MobileNav() {
+export default function MobileNav({ owner = true }: { owner?: boolean }) {
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
+  // Collaborateur : uniquement les sous-onglets M&J (libellés courts).
+  const shortLabel: Record<string, string> = {
+    "/mj": "M&J",
+    "/mj/clients": "Clients",
+    "/mj/devis": "Devis",
+    "/mj/agents": "Agents",
+    "/mj/suivi": "Matériel",
+    "/mj/memo": "Mémo",
+  };
+  const items = owner
+    ? [...ownerTabs, settingsModule]
+    : (moduleByKey.mj.children ?? []).map((c) => ({
+        key: c.href,
+        href: c.href,
+        label: shortLabel[c.href] ?? c.label,
+        Icon: moduleByKey.mj.Icon,
+        color: moduleByKey.mj.color,
+      }));
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden">
-      {[...tabs, settingsModule].map((m) => {
+      {items.map((m) => {
         const active = isActive(m.href);
         return (
           <Link

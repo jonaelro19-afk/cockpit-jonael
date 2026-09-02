@@ -7,8 +7,17 @@ import { usePathname } from "next/navigation";
 import { modules, settingsModule } from "@/lib/modules";
 import BrandMark from "./BrandMark";
 
-export default function Sidebar({ footer }: { footer?: ReactNode }) {
+export default function Sidebar({
+  footer,
+  owner = true,
+}: {
+  footer?: ReactNode;
+  owner?: boolean;
+}) {
   const pathname = usePathname();
+  const visibleModules = owner
+    ? modules
+    : modules.filter((m) => m.key === "mj");
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -63,12 +72,12 @@ export default function Sidebar({ footer }: { footer?: ReactNode }) {
       >
         <BrandMark className="h-7 w-7" />
         Cockpit
-        <span className="text-muted">/ Jonael</span>
+        <span className="text-muted">{owner ? "/ Jonael" : "/ M&J"}</span>
       </Link>
 
-      {modules.map(item)}
+      {visibleModules.map(item)}
 
-      <div className="mt-1">{item(settingsModule)}</div>
+      {owner && <div className="mt-1">{item(settingsModule)}</div>}
 
       {footer && (
         <div className="border-t border-line md:mt-auto">{footer}</div>

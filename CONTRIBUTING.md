@@ -12,9 +12,12 @@ de modifier quoi que ce soit.
 
 | Tu peux modifier librement | Chemin |
 |---|---|
-| Toutes les pages M&J (accueil, frise, clients, devis, suivi matériel) | `src/app/mj/**` |
-| La logique métier M&J (helpers, requêtes) | `src/lib/mj.ts` |
-| Les constantes/formatteurs M&J côté client | `src/lib/mj-shared.ts` |
+| Toutes les pages M&J : accueil, frise, clients, devis, suivi matériel, **Agents IA**, **Mémo** | `src/app/mj/**` |
+| La logique métier M&J (helpers, requêtes, notes, contexte IA) | `src/lib/mj.ts`, `src/lib/mj-shared.ts`, `src/lib/mj-notes.ts`, `src/lib/mj-context.ts` |
+| L'assistant IA M&J | `src/lib/ai/mj-assistant.ts` |
+
+Tu peux aussi te connecter à l'app en ligne : tu ne verras que l'onglet
+**M&J** (Gmail, agenda, sport, tâches, BTS de Jonael te sont masqués).
 
 | À NE PAS toucher (autres modules) | Pourquoi |
 |---|---|

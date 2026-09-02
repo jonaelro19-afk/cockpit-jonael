@@ -1,10 +1,11 @@
-// Ajoute le champ `id` sur session.user pour TypeScript.
+// Ajoute `id` et `role` sur session.user pour TypeScript.
 import type { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      role: "owner" | "collab";
     } & DefaultSession["user"];
   }
 }
