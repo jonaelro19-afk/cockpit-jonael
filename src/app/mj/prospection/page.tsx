@@ -15,7 +15,7 @@ import {
   needsFollowUp,
   fmtEur0,
 } from "@/lib/prospection-shared";
-import { fmtDate, relativeDays } from "@/lib/mj-shared";
+import { fmtDate } from "@/lib/mj-shared";
 
 export default async function ProspectionPage() {
   const session = await auth();
@@ -94,50 +94,25 @@ export default async function ProspectionPage() {
             />
           </div>
 
-          {(stats.toFollowUp.length > 0 || stats.nextMeetings.length > 0) && (
-            <div className="mb-6 grid gap-4 lg:grid-cols-2">
-              {stats.toFollowUp.length > 0 && (
-                <Card title="À relancer en priorité">
-                  <ul className="space-y-1.5">
-                    {stats.toFollowUp.map((p) => (
-                      <li key={p.id}>
-                        <Link
-                          href={`/mj/prospection/${p.id}`}
-                          className="flex items-center justify-between gap-2 rounded-field px-2 py-1.5 text-sm hover:bg-surface-2"
-                        >
-                          <span className="truncate font-medium">{p.name}</span>
-                          <span className="shrink-0 text-xs text-muted">
-                            {p.lastContact
-                              ? `vu ${relativeDays(p.lastContact)}`
-                              : "jamais contacté"}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-              {stats.nextMeetings.length > 0 && (
-                <Card title="Prochains rendez-vous">
-                  <ul className="space-y-1.5">
-                    {stats.nextMeetings.map((m, i) => (
-                      <li key={i}>
-                        <Link
-                          href={`/mj/prospection/${m.id}`}
-                          className="flex items-center gap-2 rounded-field px-2 py-1.5 text-sm hover:bg-surface-2"
-                        >
-                          <CalendarClock size={14} className="shrink-0 text-muted" />
-                          <span className="truncate font-medium">{m.name}</span>
-                          <span className="ml-auto shrink-0 text-xs text-muted">
-                            {fmtDate(m.date)}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-            </div>
+          {stats.nextMeetings.length > 0 && (
+            <Card title="Prochains rendez-vous" className="mb-6">
+              <ul className="space-y-1.5">
+                {stats.nextMeetings.map((m, i) => (
+                  <li key={i}>
+                    <Link
+                      href={`/mj/prospection/${m.id}`}
+                      className="flex items-center gap-2 rounded-field px-2 py-1.5 text-sm hover:bg-surface-2"
+                    >
+                      <CalendarClock size={14} className="shrink-0 text-muted" />
+                      <span className="truncate font-medium">{m.name}</span>
+                      <span className="ml-auto shrink-0 text-xs text-muted">
+                        {fmtDate(m.date)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
           )}
 
           {/* Pipeline par statut */}
