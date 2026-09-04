@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, Target, AlarmClock, CalendarClock, TrendingUp } from "lucide-react";
+import {
+  Plus,
+  Target,
+  AlarmClock,
+  CalendarClock,
+  TrendingUp,
+  Phone,
+} from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import EmptyState from "@/components/EmptyState";
@@ -131,41 +138,57 @@ export default async function ProspectionPage() {
                 </h2>
                 <ul className="space-y-2">
                   {g.items.map((p) => (
-                    <li key={p.id}>
-                      <Link
-                        href={`/mj/prospection/${p.id}`}
-                        className="flex items-center gap-3 rounded-field border border-line bg-surface px-4 py-3 hover:bg-surface-2"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
-                            {p.priority !== "normale" && (
-                              <span
-                                className="shrink-0 text-[10px]"
-                                title={priorityMeta[p.priority]?.label}
-                                style={{ color: priorityMeta[p.priority]?.color }}
-                              >
-                                {p.priority === "haute" ? "▲" : "▽"}
-                              </span>
-                            )}
-                            {p.name}
-                            {needsFollowUp(p) && (
-                              <AlarmClock
-                                size={12}
-                                className="shrink-0 text-live"
-                              />
-                            )}
-                          </p>
-                          <p className="mt-0.5 truncate text-xs text-muted">
-                            {p.segment}
-                            {p.contactName ? ` · ${p.contactName}` : ""}
-                            {p.budgetEur ? ` · ${fmtEur0(p.budgetEur)}` : ""}
-                            {p._count.interactions
-                              ? ` · ${p._count.interactions} échange${p._count.interactions > 1 ? "s" : ""}`
-                              : ""}
-                          </p>
-                        </div>
-                        <QuickStatus id={p.id} status={p.status} />
-                      </Link>
+                    <li
+                      key={p.id}
+                      className="flex items-center gap-3 rounded-field border border-line bg-surface px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/mj/prospection/${p.id}`}
+                          className="flex items-center gap-1.5 text-sm font-semibold hover:underline"
+                        >
+                          {p.priority !== "normale" && (
+                            <span
+                              className="shrink-0 text-[10px]"
+                              title={priorityMeta[p.priority]?.label}
+                              style={{ color: priorityMeta[p.priority]?.color }}
+                            >
+                              {p.priority === "haute" ? "▲" : "▽"}
+                            </span>
+                          )}
+                          <span className="truncate">{p.name}</span>
+                          {needsFollowUp(p) && (
+                            <AlarmClock size={12} className="shrink-0 text-live" />
+                          )}
+                        </Link>
+
+                        <p className="mt-0.5 truncate text-xs text-muted">
+                          {p.sector || p.segment}
+                          {p.contactName ? ` · ${p.contactName}` : ""}
+                        </p>
+
+                        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+                          {p.phone && (
+                            <a
+                              href={`tel:${p.phone.replace(/\s/g, "")}`}
+                              className="flex items-center gap-1 font-medium text-text hover:underline"
+                            >
+                              <Phone size={11} className="text-muted" />
+                              {p.phone}
+                            </a>
+                          )}
+                          {p.budgetEur != null && (
+                            <span className="text-muted">{fmtEur0(p.budgetEur)}</span>
+                          )}
+                          {p._count.interactions > 0 && (
+                            <span className="text-faint">
+                              {p._count.interactions} échange
+                              {p._count.interactions > 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <QuickStatus id={p.id} status={p.status} />
                     </li>
                   ))}
                 </ul>
