@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Phone, Mail, Globe, MapPin } from "lucide-react";
-import { fmtEur0 } from "@/lib/prospection-shared";
+import { fmtEur0, priorityMeta } from "@/lib/prospection-shared";
 import { fmtDate } from "@/lib/mj-shared";
 import ProspectForm from "../ProspectForm";
 import { updateProspect, deleteProspect } from "../actions";
@@ -69,8 +69,13 @@ export default function ProspectDetail({ prospect }: { prospect: P }) {
     <div className="rounded-card border border-line bg-surface p-5">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted">
+          <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted">
             {p.segment}
+            {p.priority && p.priority !== "normale" && (
+              <span style={{ color: priorityMeta[p.priority]?.color }}>
+                · {priorityMeta[p.priority]?.label}
+              </span>
+            )}
           </p>
           {p.contactName && (
             <p className="text-sm font-medium">{p.contactName}</p>

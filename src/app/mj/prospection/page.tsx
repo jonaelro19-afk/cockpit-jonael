@@ -11,6 +11,7 @@ import { getProspects, getProspectionStats } from "@/lib/prospection";
 import {
   PROSPECT_STATUSES,
   statusMeta,
+  priorityMeta,
   needsFollowUp,
   fmtEur0,
 } from "@/lib/prospection-shared";
@@ -25,9 +26,12 @@ export default async function ProspectionPage() {
     getProspectionStats(),
   ]);
 
+  const rank = (pr: string) => priorityMeta[pr]?.rank ?? 1;
   const byStatus = PROSPECT_STATUSES.map((status) => ({
     status,
-    items: prospects.filter((p) => p.status === status),
+    items: prospects
+      .filter((p) => p.status === status)
+      .sort((a, b) => rank(a.priority) - rank(b.priority)),
   })).filter((g) => g.items.length > 0);
 
   return (
@@ -159,6 +163,15 @@ export default async function ProspectionPage() {
                       >
                         <div className="min-w-0 flex-1">
                           <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
+                            {p.priority !== "normale" && (
+                              <span
+                                className="shrink-0 text-[10px]"
+                                title={priorityMeta[p.priority]?.label}
+                                style={{ color: priorityMeta[p.priority]?.color }}
+                              >
+                                {p.priority === "haute" ? "▲" : "▽"}
+                              </span>
+                            )}
                             {p.name}
                             {needsFollowUp(p) && (
                               <AlarmClock

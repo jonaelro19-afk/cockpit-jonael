@@ -325,6 +325,7 @@ model Prospect {
   lastContact   DateTime?
   // "À contacter" | "En cours" | "Devis envoyé" | "Négociation" | "Contrat signé" | "Refusé" | "En pause"
   status        String                @default("À contacter")
+  priority      String                @default("normale") // "haute" | "normale" | "basse"
   notes         String                @default("")
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt

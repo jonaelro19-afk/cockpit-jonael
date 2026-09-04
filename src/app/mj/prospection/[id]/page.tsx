@@ -59,6 +59,7 @@ export default async function ProspectPage({
             firstContact: iso(p.firstContact),
             lastContact: iso(p.lastContact),
             status: p.status,
+            priority: p.priority,
             notes: p.notes,
           }}
         />

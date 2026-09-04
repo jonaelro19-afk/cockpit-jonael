@@ -4,6 +4,8 @@ import { useFormStatus } from "react-dom";
 import {
   PROSPECT_SEGMENTS,
   PROSPECT_STATUSES,
+  PROSPECT_PRIORITIES,
+  priorityMeta,
 } from "@/lib/prospection-shared";
 
 type P = {
@@ -21,6 +23,7 @@ type P = {
   firstContact: Date | string | null;
   lastContact: Date | string | null;
   status: string;
+  priority: string;
   notes: string;
 };
 
@@ -78,6 +81,16 @@ export default function ProspectForm({
           <select name="status" defaultValue={p.status ?? "À contacter"} className={field}>
             {PROSPECT_STATUSES.map((s) => (
               <option key={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={lbl}>Priorité</label>
+          <select name="priority" defaultValue={p.priority ?? "normale"} className={field}>
+            {PROSPECT_PRIORITIES.map((pr) => (
+              <option key={pr} value={pr}>
+                {priorityMeta[pr].label}
+              </option>
             ))}
           </select>
         </div>

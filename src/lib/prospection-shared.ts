@@ -32,6 +32,16 @@ export const statusMeta: Record<
   "En pause": { color: "#6b6b70", dot: "#6b6b70" },
 };
 
+export const PROSPECT_PRIORITIES = ["haute", "normale", "basse"] as const;
+export const priorityMeta: Record<
+  string,
+  { label: string; color: string; rank: number }
+> = {
+  haute: { label: "Priorité haute", color: "#f87171", rank: 0 },
+  normale: { label: "Priorité normale", color: "#9a9a9e", rank: 1 },
+  basse: { label: "Priorité basse", color: "#6b6b70", rank: 2 },
+};
+
 export const PROSPECT_SEGMENTS = [
   "Fleuriste",
   "Restaurant",

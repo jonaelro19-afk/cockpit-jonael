@@ -44,7 +44,8 @@ export async function getMjContext(
     if (prospects.length) {
       const lines = prospects.map(
         (p) =>
-          `- ${p.name} (${p.segment}) — statut : ${p.status}` +
+          `- ${p.name} (${p.segment}${p.priority === "haute" ? ", priorité haute" : ""}) — statut : ${p.status}` +
+          (p.contactName ? ` — contact : ${p.contactName}` : "") +
           (p.budgetEur ? ` — budget ~${p.budgetEur} €` : "") +
           (p.lastContact
             ? ` — dernier contact ${p.lastContact.toISOString().slice(0, 10)}`

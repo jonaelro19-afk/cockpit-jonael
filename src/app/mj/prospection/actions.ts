@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import {
   PROSPECT_STATUSES,
   PROSPECT_SEGMENTS,
+  PROSPECT_PRIORITIES,
   INTERACTION_KINDS,
 } from "@/lib/prospection-shared";
 
@@ -46,6 +47,7 @@ function readProspect(fd: FormData) {
     firstContact: date(fd.get("firstContact")),
     lastContact: date(fd.get("lastContact")),
     status: oneOf(fd.get("status"), PROSPECT_STATUSES, "À contacter"),
+    priority: oneOf(fd.get("priority"), PROSPECT_PRIORITIES, "normale"),
     notes: String(fd.get("notes") ?? "").trim(),
   };
 }
