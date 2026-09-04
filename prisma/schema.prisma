@@ -307,6 +307,45 @@ model MjNote {
   @@index([theme])
 }
 
+// Prospection M&J : pipeline commercial (prospects → clients).
+model Prospect {
+  id            String                @id @default(cuid())
+  name          String // nom de l'entreprise
+  segment       String                @default("Autre")
+  contactName   String                @default("")
+  email         String                @default("")
+  phone         String                @default("")
+  address       String                @default("")
+  website       String                @default("")
+  sector        String                @default("")
+  headcount     Int?
+  budgetEur     Int? // budget vidéo annuel estimé
+  eventsPerYear Int?
+  firstContact  DateTime?
+  lastContact   DateTime?
+  // "À contacter" | "En cours" | "Devis envoyé" | "Négociation" | "Contrat signé" | "Refusé" | "En pause"
+  status        String                @default("À contacter")
+  notes         String                @default("")
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  interactions  ProspectInteraction[]
+
+  @@index([status])
+}
+
+model ProspectInteraction {
+  id         String    @id @default(cuid())
+  prospectId String
+  date       DateTime  @default(now())
+  kind       String    @default("Appel") // "Appel" | "Email" | "Réunion" | "Message" | "Autre"
+  who        String    @default("") // "Jonaël" | "Malo"
+  summary    String    @default("")
+  nextAt     DateTime? // prochain RDV / relance prévue
+  prospect   Prospect  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@index([prospectId])
+}
+
 model MjAnalysis {
   id        String   @id @default(cuid())
   title     String   @default("Analyse")

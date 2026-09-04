@@ -18,6 +18,7 @@ export default function MobileNav({ owner = true }: { owner?: boolean }) {
   // Collaborateur : uniquement les sous-onglets M&J (libellés courts).
   const shortLabel: Record<string, string> = {
     "/mj": "M&J",
+    "/mj/prospection": "Prospect.",
     "/mj/clients": "Clients",
     "/mj/devis": "Devis",
     "/mj/agents": "Agents",

@@ -60,6 +60,7 @@ export const modules: ModuleDef[] = [
     color: "#f472b6",
     children: [
       { label: "Vue d'ensemble", href: "/mj" },
+      { label: "Prospection", href: "/mj/prospection" },
       { label: "Clients", href: "/mj/clients" },
       { label: "Devis", href: "/mj/devis" },
       { label: "Agents IA", href: "/mj/agents" },

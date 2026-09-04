@@ -34,11 +34,33 @@ export async function getMjContext(
     ([theme, items]) => `## ${theme}\n\n${items.join("\n\n")}`,
   );
 
+  // État de la prospection (uniquement en version complète).
+  let prospectionBlock = "";
+  if (!pinnedOnly) {
+    const prospects = await prisma.prospect.findMany({
+      orderBy: { updatedAt: "desc" },
+      take: 60,
+    });
+    if (prospects.length) {
+      const lines = prospects.map(
+        (p) =>
+          `- ${p.name} (${p.segment}) — statut : ${p.status}` +
+          (p.budgetEur ? ` — budget ~${p.budgetEur} €` : "") +
+          (p.lastContact
+            ? ` — dernier contact ${p.lastContact.toISOString().slice(0, 10)}`
+            : "") +
+          (p.notes ? ` — ${p.notes.slice(0, 160)}` : ""),
+      );
+      prospectionBlock = `\n\n## Prospection (pipeline commercial actuel)\n\n${lines.join("\n")}`;
+    }
+  }
+
   const text = [
     "CONNAISSANCES DE L'AGENCE M&J PRODUCTION (source de vérité — à utiliser pour toute réponse).",
     "M&J Production = agence photo/vidéo de Jonael et Malo, basée à Toulouse.",
     "",
     blocks.join("\n\n"),
+    prospectionBlock,
   ].join("\n");
 
   cache[key] = { text, at: Date.now() };
