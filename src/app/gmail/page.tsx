@@ -138,11 +138,14 @@ export default async function GmailPage() {
 
       {/* IMPORTANTS — tout en haut, en rouge */}
       <section className="mb-5 overflow-hidden rounded-card border-2 border-live/50 bg-live/[0.06]">
-        <div className="flex items-center gap-2 border-b border-live/25 px-5 py-3">
-          <AlertCircle size={18} className="text-live" />
-          <h2 className="text-sm font-bold uppercase tracking-wide text-live">
+        <div className="flex items-center justify-between gap-2 border-b border-live/25 px-5 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-live">
+            <AlertCircle size={18} className="text-live" />
             À traiter en priorité — {important.length}
           </h2>
+          {canArchive && (
+            <ArchiveBucketButton bucket="important" count={important.length} />
+          )}
         </div>
         {important.length === 0 ? (
           <p className="px-5 py-6 text-center text-sm text-muted">
